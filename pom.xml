@@ -19,6 +19,11 @@
   <properties>
     <maven.compiler.release>25</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- javafx:run is typed on the command line, so Maven runs it in every module, and checks
+         each has a main class before reading skip. Only app has a window to open, and it sets
+         skip back to false. -->
+    <javafx.mainClass>dev.noahpn.litetype.app.LiteTypeApp</javafx.mainClass>
+    <javafx.skip>true</javafx.skip>
   </properties>
 
   <dependencyManagement>

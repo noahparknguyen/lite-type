@@ -1,0 +1,56 @@
+/* Every colour and size here is a placeholder until the look step. */
+
+.root {
+    -fx-background-color: #1e1f22;
+    -fx-padding: 40px;
+}
+
+/* Set once for the whole display. A letter's look never changes its font, so restyling a letter
+   never measures text again. */
+.typing-view {
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-size: 28px;
+}
+
+.letter {
+    -fx-fill: #6f737a;
+}
+
+.letter:correct {
+    -fx-fill: #5fb865;
+}
+
+.letter:wrong {
+    -fx-fill: #f75464;
+}
+
+.letter:extra {
+    -fx-fill: #a83a46;
+}
+
+.letter:missed {
+    -fx-fill: #8a5a60;
+}
+
+.separator {
+    -fx-fill: transparent;
+}
+
+.separator.line-break {
+    -fx-fill: #4a4d52;
+}
+
+.separator:wrong {
+    -fx-fill: #f75464;
+}
+
+.cursor {
+    -fx-background-color: #e8e8e8;
+    -fx-pref-width: 2px;
+}
+
+.status {
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-size: 16px;
+    -fx-text-fill: #9da0a8;
+}

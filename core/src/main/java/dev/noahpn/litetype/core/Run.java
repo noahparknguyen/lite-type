@@ -217,6 +217,15 @@ public final class Run {
     }
 
     /**
+     * Returns whether the clock has started: whether a key has changed anything yet.
+     *
+     * @return whether the run has started
+     */
+    public boolean isStarted() {
+        return started;
+    }
+
+    /**
      * Returns whether the run has ended.
      *
      * @return whether the run is finished

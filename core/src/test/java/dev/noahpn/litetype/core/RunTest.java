@@ -165,7 +165,10 @@ class RunTest {
         run.type(' ', 0);
         run.backspace(0);
         run.tick(40 * SECOND);
+        assertFalse(run.isStarted());
         assertFalse(run.isFinished());
+        run.type('g', 41 * SECOND);
+        assertTrue(run.isStarted());
     }
 
     @Test

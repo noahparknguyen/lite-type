@@ -14,7 +14,16 @@
 
   <artifactId>lite-type-app</artifactId>
 
+  <properties>
+    <javafx.skip>false</javafx.skip>
+  </properties>
+
   <dependencies>
+    <dependency>
+      <groupId>dev.noahpn</groupId>
+      <artifactId>lite-type-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
@@ -27,7 +36,6 @@
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <configuration>
-          <mainClass>dev.noahpn.litetype.app.LiteTypeApp</mainClass>
           <options>
             <!-- JavaFX loads native code, which Java 24 and later warn about unless allowed. -->
             <option>--enable-native-access=javafx.graphics</option>
