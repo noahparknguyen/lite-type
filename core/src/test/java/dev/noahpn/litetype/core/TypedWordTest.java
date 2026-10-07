@@ -24,6 +24,7 @@ class TypedWordTest {
     @Test
     void typedLettersAreCorrectOrWrongAndTheRestUntyped() {
         TypedWord word = typed("the", "tx");
+        assertEquals(2, word.typedLength());
         assertEquals(Look.CORRECT, word.lookAt(0));
         assertEquals(Look.WRONG, word.lookAt(1));
         assertEquals(Look.UNTYPED, word.lookAt(2));

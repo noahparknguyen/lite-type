@@ -53,6 +53,16 @@ public final class TypedWord {
     }
 
     /**
+     * Returns how many letters have been typed into the word, extra letters included. The cursor
+     * sits right after them.
+     *
+     * @return the number of letters typed
+     */
+    public int typedLength() {
+        return input.length();
+    }
+
+    /**
      * Returns the character shown at {@code index}. Within the word it's the word's own letter,
      * even where a wrong one was typed. Past the end it's the extra letter that was typed.
      *
