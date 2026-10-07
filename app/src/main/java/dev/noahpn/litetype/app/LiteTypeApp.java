@@ -100,11 +100,10 @@ public class LiteTypeApp extends Application {
         if (run.isFinished() && status.getText().isEmpty()) {
             Results results = Results.of(run);
             status.setText(String.format(
-                "%.0f wpm   %.0f%% accuracy   %d fixed   %d left in",
+                "%.0f wpm   %.0f%% accuracy   %.0f%% text accuracy",
                 results.wpm(),
                 results.accuracy() * 100,
-                results.fixed(),
-                results.leftIn()));
+                results.textAccuracy() * 100));
         }
     }
 

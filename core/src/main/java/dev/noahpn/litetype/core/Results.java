@@ -4,16 +4,16 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * What a finished run scored: its speed, its accuracy, and its mistakes as counts. Every wrong
- * keypress ends up either fixed or left in, so the two counts always add up to the wrong
- * keypresses.
+ * What a finished run scored: its speed, and two accuracies. Accuracy counts every keypress, so
+ * a mistake still costs something after it's fixed. Text accuracy looks only at the text as it
+ * ended, so fixing every mistake gives 100%.
  *
- * @param wpm      words per minute, counting only fully correct words, unrounded
- * @param accuracy right keypresses as a share of all keypresses, from 0 to 1
- * @param fixed    mistakes made and then undone
- * @param leftIn   mistakes still in the text at the end
+ * @param wpm          words per minute, counting only fully correct words, unrounded
+ * @param accuracy     right keypresses as a share of all keypresses, from 0 to 1
+ * @param textAccuracy characters that ended up right, as a share of the characters reached,
+ *                     from 0 to 1
  */
-public record Results(double wpm, double accuracy, int fixed, int leftIn) {
+public record Results(double wpm, double accuracy, double textAccuracy) {
 
     /**
      * Works out the results of a finished run. A run that took no time at all, a single letter
@@ -29,20 +29,43 @@ public record Results(double wpm, double accuracy, int fixed, int leftIn) {
         Duration elapsed = run.elapsed();
 
         int wpmCharacters = 0;
-        int leftIn = 0;
+        int rightCharacters = 0;
+        int wrongCharacters = 0;
 
         for (int i = 0; i <= run.currentWordIndex(); i++) {
             TypedWord word = run.word(i);
             wpmCharacters += wpmCharacters(word);
-            leftIn += mistakesLeftIn(word);
+
+            // Untyped characters weren't reached, so they count neither way. Missed ones were
+            // passed over, so they count as wrong.
+            for (int j = 0; j < word.length(); j++) {
+                Look look = word.lookAt(j);
+                if (look == Look.CORRECT) {
+                    rightCharacters++;
+                } else if (look != Look.UNTYPED) {
+                    wrongCharacters++;
+                }
+            }
+
+            Look separator = word.separatorLook();
+            if (separator == Look.CORRECT) {
+                rightCharacters++;
+            } else if (separator == Look.WRONG) {
+                wrongCharacters++;
+            }
         }
 
         // A run can only finish after a counted key, so there's always at least one.
         int keys = run.correctKeys() + run.wrongKeys();
         double accuracy = (double) run.correctKeys() / keys;
+
+        // Every character typed can be erased before a timed run ends, leaving none.
+        int characters = rightCharacters + wrongCharacters;
+        double textAccuracy = characters == 0 ? 0 : (double) rightCharacters / characters;
+
         double wpm = elapsed.isZero() ? 0 : WpmCalculator.calculate(wpmCharacters, elapsed);
 
-        return new Results(wpm, accuracy, run.wrongKeys() - leftIn, leftIn);
+        return new Results(wpm, accuracy, textAccuracy);
     }
 
     /**
@@ -65,27 +88,5 @@ public record Results(double wpm, double accuracy, int fixed, int leftIn) {
         }
 
         return word.separatorLook() == Look.CORRECT ? typed + 1 : 0;
-    }
-
-    /**
-     * Returns the mistakes still showing in a word: each wrong or extra letter, and the key that
-     * ended it if that was wrong. Letters skipped by an early Space or Enter aren't counted one by
-     * one, because the early key is the one mistake that skipped them.
-     */
-    private static int mistakesLeftIn(TypedWord word) {
-        int mistakes = 0;
-
-        for (int i = 0; i < word.length(); i++) {
-            Look look = word.lookAt(i);
-            if (look == Look.WRONG || look == Look.EXTRA) {
-                mistakes++;
-            }
-        }
-
-        if (word.separatorLook() == Look.WRONG) {
-            mistakes++;
-        }
-
-        return mistakes;
     }
 }

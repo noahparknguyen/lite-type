@@ -18,12 +18,20 @@ class ResultsTest {
         // "ab " and "cd" are 5 characters, one word, in a tenth of a minute.
         assertEquals(10.0, results.wpm(), 0.001);
         assertEquals(1.0, results.accuracy(), 0.001);
-        assertEquals(0, results.fixed());
-        assertEquals(0, results.leftIn());
+        assertEquals(1.0, results.textAccuracy(), 0.001);
     }
 
     @Test
-    void oneSlipFixedAndOneLeftIn() {
+    void fixedMistakeLowersAccuracyButNotTextAccuracy() {
+        Run run = Run.untimed(text("the fox"));
+        press(run, "tx\bhe fox");
+        Results results = Results.of(run);
+        assertEquals(7.0 / 8, results.accuracy(), 0.001);
+        assertEquals(1.0, results.textAccuracy(), 0.001);
+    }
+
+    @Test
+    void textAccuracyCountsEveryCharacterAnEarlySpaceSkipped() {
         Run run = Run.untimed(text("the quick brown fox"));
         press(run, "the qx\buick br fo");
         run.type('x', 60 * SECOND);
@@ -31,18 +39,26 @@ class ResultsTest {
         // "the ", "quick ", and "fox" earn 13 characters; "brown" earns nothing.
         assertEquals(13.0 / 5, results.wpm(), 0.001);
         assertEquals(15.0 / 17, results.accuracy(), 0.001);
-        assertEquals(1, results.fixed());
-        assertEquals(1, results.leftIn());
+        // The early space was one key, but it left "own" and the space after it wrong.
+        assertEquals(15.0 / 19, results.textAccuracy(), 0.001);
     }
 
     @Test
-    void wordEndedByTheWrongKeyEarnsNothingAndIsLeftIn() {
+    void wordEndedByTheWrongKeyEarnsNothingAndCountsAgainstTheText() {
         Run run = Run.untimed(text("a\nb"));
         press(run, "a ");
         run.type('b', 60 * SECOND);
         Results results = Results.of(run);
         assertEquals(1.0 / 5, results.wpm(), 0.001);
-        assertEquals(1, results.leftIn());
+        assertEquals(2.0 / 3, results.textAccuracy(), 0.001);
+    }
+
+    @Test
+    void extraLettersCountAgainstTheText() {
+        Run run = Run.untimed(text("the fox"));
+        press(run, "thee fox");
+        // The extra e and the space after it are wrong; the six letters are right.
+        assertEquals(6.0 / 8, Results.of(run).textAccuracy(), 0.001);
     }
 
     @Test
@@ -53,7 +69,8 @@ class ResultsTest {
         Results results = Results.of(run);
         // "go " and the "g" in progress are 4 characters in a fifth of a minute.
         assertEquals(4.0, results.wpm(), 0.001);
-        assertEquals(0, results.leftIn());
+        // The "o" not yet typed when time ran out isn't counted against the text.
+        assertEquals(1.0, results.textAccuracy(), 0.001);
     }
 
     @Test
@@ -63,21 +80,15 @@ class ResultsTest {
         run.tick(12 * SECOND);
         Results results = Results.of(run);
         assertEquals(3.0, results.wpm(), 0.001);
-        assertEquals(1, results.leftIn());
+        assertEquals(3.0 / 4, results.textAccuracy(), 0.001);
     }
 
     @Test
-    void fixedPlusLeftInAlwaysEqualsWrongKeys() {
-        Run run = Run.untimed(text("the quick fox"));
-        press(run, "tgx\b\bhe ");
-        press(run, "qu \bick");
-        run.deleteWord(0);
-        press(run, "quiet fox");
-        Results results = Results.of(run);
-        // Fixed: g and x, then the early space. Left in: the e and t of "quiet".
-        assertEquals(3, results.fixed());
-        assertEquals(2, results.leftIn());
-        assertEquals(run.wrongKeys(), results.fixed() + results.leftIn());
+    void timedRunWithEverythingErasedHasNoTextAccuracy() {
+        Run run = Run.timed(endless(), Duration.ofSeconds(12));
+        press(run, "g\b");
+        run.tick(12 * SECOND);
+        assertEquals(0.0, Results.of(run).textAccuracy());
     }
 
     @Test
