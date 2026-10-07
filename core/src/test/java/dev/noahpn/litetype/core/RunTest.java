@@ -3,60 +3,13 @@ package dev.noahpn.litetype.core;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static dev.noahpn.litetype.core.Typing.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RunTest {
-
-    private static final long SECOND = 1_000_000_000L;
-
-    /**
-     * Splits text into words the way content will: a space or line break ends each word, and the
-     * last word has nothing after it.
-     */
-    private static Iterator<Word> text(String text) {
-        List<Word> words = new ArrayList<>();
-        StringBuilder letters = new StringBuilder();
-
-        for (char c : text.toCharArray()) {
-            if (c == ' ' || c == '\n') {
-                Separator separator = c == ' ' ? Separator.SPACE : Separator.LINE_BREAK;
-                words.add(new Word(letters.toString(), separator, 0));
-                letters.setLength(0);
-            } else {
-                letters.append(c);
-            }
-        }
-
-        words.add(new Word(letters.toString(), Separator.NONE, 0));
-        return words.iterator();
-    }
-
-    private static Iterator<Word> endless() {
-        return Stream.generate(() -> new Word("go", Separator.SPACE, 0)).iterator();
-    }
-
-    /**
-     * Presses each key at time zero, reading {@code '\b'} as Backspace.
-     */
-    private static void press(Run run, String keys) {
-        for (char key : keys.toCharArray()) {
-            if (key == '\b') {
-                run.backspace(0);
-            } else {
-                run.type(key, 0);
-            }
-        }
-    }
 
     @Test
     void lettersGoIntoTheCurrentWord() {
