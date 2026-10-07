@@ -1,6 +1,7 @@
 package dev.noahpn.litetype.app;
 
 import dev.noahpn.litetype.core.Separator;
+import dev.noahpn.litetype.core.SnippetParser;
 import dev.noahpn.litetype.core.Word;
 
 import java.util.ArrayList;
@@ -10,9 +11,27 @@ import java.util.random.RandomGenerator;
 
 /**
  * Text to type until real content exists: common words, picked for this project, in a random
- * order. Replaced at the content step.
+ * order, and one Java method written for it. Replaced at the content step.
  */
 final class StandInText {
+
+    private static final String SNIPPET = """
+        static int countWords(String text) {
+            int count = 0;
+            boolean inWord = false;
+
+            for (char c : text.toCharArray()) {
+                if (Character.isWhitespace(c)) {
+                    inWord = false;
+                } else if (!inWord) {
+                    inWord = true;
+                    count++;
+                }
+            }
+
+            return count;
+        }
+        """;
 
     private static final List<String> WORDS = List.of(
         "about", "after", "again", "around", "because", "before", "between", "bring", "change",
@@ -41,5 +60,14 @@ final class StandInText {
         }
 
         return words.iterator();
+    }
+
+    /**
+     * Returns the words of the stand-in snippet.
+     *
+     * @return the snippet's words, in order
+     */
+    static Iterator<Word> snippet() {
+        return SnippetParser.parse(SNIPPET).iterator();
     }
 }

@@ -92,6 +92,16 @@ class ResultsTest {
     }
 
     @Test
+    void byCharacterAWrongLetterStaysInTheText() {
+        Run run = Run.untimed(text("int x"), Advance.BY_CHARACTER);
+        press(run, "inr x");
+        Results results = Results.of(run);
+        // The r replaced the t: one wrong key, and one wrong character of five.
+        assertEquals(4.0 / 5, results.accuracy(), 0.001);
+        assertEquals(4.0 / 5, results.textAccuracy(), 0.001);
+    }
+
+    @Test
     void runThatTookNoTimeScoresZeroWpm() {
         Run run = Run.untimed(text("a"));
         press(run, "a");

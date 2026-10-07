@@ -11,15 +11,16 @@ import javafx.scene.text.Text;
 import java.util.Locale;
 
 /**
- * One word on screen: a {@link Text} per letter, then a mark for the separator after it. Each
- * letter is placed one cell after the last, and its look is a CSS pseudo-class, such as
- * {@code :correct}, which the stylesheet colours.
+ * One word on screen: a {@link Text} per letter, then a mark in the gap after it. Each letter is
+ * placed one cell after the last, and its look is a CSS pseudo-class, such as {@code :correct},
+ * which the stylesheet colours.
  */
 final class WordNode extends Group {
 
     private static final Look[] LOOKS = Look.values();
     private static final PseudoClass[] LOOK_CLASSES = new PseudoClass[LOOKS.length];
     private static final PseudoClass WRONG = PseudoClass.getPseudoClass("wrong");
+    private static final PseudoClass LINE_BREAK = PseudoClass.getPseudoClass("line-break");
 
     static {
         for (Look look : LOOKS) {
@@ -50,9 +51,9 @@ final class WordNode extends Group {
         };
         separator = new Text(mark);
         separator.getStyleClass().add("separator");
-        if (kind == Separator.LINE_BREAK) {
-            separator.getStyleClass().add("line-break");
-        }
+        // A pseudo-class, not a style class: JavaFX ranks one style class above any number of
+        // pseudo-classes, so a style class here would outrank :wrong.
+        separator.pseudoClassStateChanged(LINE_BREAK, kind == Separator.LINE_BREAK);
         separator.setTextOrigin(VPos.TOP);
         getChildren().add(separator);
 
@@ -60,17 +61,8 @@ final class WordNode extends Group {
     }
 
     /**
-     * Returns how many cells the word's letters take, extra letters included.
-     *
-     * @return the word's width in characters
-     */
-    int cells() {
-        return word.length();
-    }
-
-    /**
      * Brings the node in line with the word: adds or removes letter nodes when extra letters
-     * came or went, and sets every letter's look.
+     * came or went, and sets the look of every letter and of the separator.
      */
     void sync() {
         int length = word.length();

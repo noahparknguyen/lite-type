@@ -186,11 +186,12 @@ public final class TypedWord {
     }
 
     /**
-     * Ends the word, because the typist pressed Space or Enter to move on. The key is right only
-     * when it's this word's separator and exactly as many letters as the word has were typed. A
-     * wrong letter inside the word doesn't make the key wrong: it was pressed in the right place.
+     * Ends the word, because the typist moved on: with Space or Enter when moving by word, or
+     * with any key at the word's end when moving by character. The key is right only when it's
+     * this word's separator and exactly as many letters as the word has were typed. A wrong letter
+     * inside the word doesn't make the key wrong: it was pressed in the right place.
      *
-     * @param key the key pressed: {@code ' '} for Space or {@code '\n'} for Enter
+     * @param key the key pressed, with Enter as {@code '\n'}
      * @return whether the key was right
      * @throws IllegalStateException if the word has already ended
      */

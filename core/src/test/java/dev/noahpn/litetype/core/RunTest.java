@@ -228,6 +228,69 @@ class RunTest {
     }
 
     @Test
+    void byCharacterAWrongKeyFillsThePositionAndShowsTheTextsLetter() {
+        Run run = Run.untimed(text("int x"), Advance.BY_CHARACTER);
+        press(run, "ix");
+        assertEquals(2, run.word(0).typedLength());
+        assertEquals(Look.WRONG, run.word(0).lookAt(1));
+        assertEquals('n', run.word(0).charAt(1));
+        assertEquals(1, run.wrongKeys());
+    }
+
+    @Test
+    void byCharacterSpaceInsideAWordIsAWrongLetter() {
+        Run run = Run.untimed(text("int x"), Advance.BY_CHARACTER);
+        press(run, "i ");
+        assertEquals(0, run.currentWordIndex());
+        assertEquals(Look.WRONG, run.word(0).lookAt(1));
+        assertEquals(Look.UNTYPED, run.word(0).lookAt(2));
+    }
+
+    @Test
+    void byCharacterAnyKeyAtAWordsEndEndsIt() {
+        Run run = Run.untimed(text("x;\ny"), Advance.BY_CHARACTER);
+        press(run, "x;q");
+        assertEquals(1, run.currentWordIndex());
+        assertEquals(2, run.word(0).length());
+        assertEquals(Look.WRONG, run.word(0).separatorLook());
+    }
+
+    @Test
+    void byCharacterFourWrongKeysAtALineEndTakeTheLineEndAndThreeLetters() {
+        Run run = Run.untimed(text("int x;\nint y;"), Advance.BY_CHARACTER);
+        press(run, "int x;abcd");
+        assertEquals(Look.WRONG, run.word(1).separatorLook());
+        assertEquals(2, run.currentWordIndex());
+        assertEquals(Look.WRONG, run.word(2).lookAt(0));
+        assertEquals(Look.WRONG, run.word(2).lookAt(2));
+        // The cursor now sits on the space after the second "int".
+        assertEquals(3, run.word(2).typedLength());
+    }
+
+    @Test
+    void byCharacterBackspaceStepsBackOverALineEnd() {
+        Run run = Run.untimed(text("x;\ny"), Advance.BY_CHARACTER);
+        press(run, "x;q\b");
+        assertEquals(0, run.currentWordIndex());
+        assertEquals(Look.UNTYPED, run.word(0).separatorLook());
+    }
+
+    @Test
+    void byCharacterSpaceOrEnterOnAnEmptyWordIsStillIgnored() {
+        Run run = Run.untimed(text("a\nb"), Advance.BY_CHARACTER);
+        press(run, "a\n\n ");
+        assertEquals(1, run.currentWordIndex());
+        assertEquals(0, run.wrongKeys());
+    }
+
+    @Test
+    void byCharacterRunEndsOnTheLastCharacterRightOrWrong() {
+        Run run = Run.untimed(text("ab"), Advance.BY_CHARACTER);
+        press(run, "ax");
+        assertTrue(run.isFinished());
+    }
+
+    @Test
     void textWithNoWordsThrows() {
         assertThrows(IllegalArgumentException.class,
             () -> Run.untimed(Collections.emptyIterator()));

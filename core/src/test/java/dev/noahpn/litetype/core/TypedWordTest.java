@@ -112,6 +112,8 @@ class TypedWordTest {
         assertFalse(typed("{", Separator.LINE_BREAK, "{").end(' '));
         assertTrue(typed("{", Separator.LINE_BREAK, "{").end('\n'));
         assertFalse(typed("the", Separator.SPACE, "the").end('\n'));
+        // Moving by character, a letter can end a word too, and it's always wrong.
+        assertFalse(typed("the", Separator.SPACE, "the").end('q'));
     }
 
     @Test

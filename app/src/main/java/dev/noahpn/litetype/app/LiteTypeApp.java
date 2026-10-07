@@ -2,6 +2,7 @@ package dev.noahpn.litetype.app;
 
 import dev.noahpn.litetype.core.Results;
 import dev.noahpn.litetype.core.Run;
+import dev.noahpn.litetype.core.Word;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -14,23 +15,24 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
- * The window: one untimed run of stand-in words at a time, typed into a {@link TypingView}.
- * Escape starts a new run. A line of results shows when the run ends, until the results screen
- * exists.
+ * The window: one untimed run of stand-in text at a time, typed into a {@link TypingView}.
+ * Escape starts a new run, and Tab switches between words and code. A line of results shows
+ * when the run ends. Tab and the results line last until the screens exist.
  */
 public class LiteTypeApp extends Application {
 
     private static final String FONT = "/fonts/JetBrainsMono-Regular.ttf";
     private static final int WORD_COUNT = 25;
-    private static final int WORD_LINES = 3;
     // What some systems type for Ctrl+Backspace or Delete. Neither is a letter.
     private static final char DELETE = 127;
 
     private final BorderPane root = new BorderPane();
     private final Label status = new Label();
+    private TextKind kind = TextKind.WORDS;
     private Run run;
     private TypingView view;
 
@@ -38,7 +40,8 @@ public class LiteTypeApp extends Application {
     public void start(Stage stage) throws IOException {
         loadFont();
 
-        Scene scene = new Scene(root, 1000, 320);
+        // Wide enough for 80 characters of code at the stylesheet's size, plus padding.
+        Scene scene = new Scene(root, 1080, 360);
         URL stylesheet = Objects.requireNonNull(
             LiteTypeApp.class.getResource("lite-type.css"),
             "the stylesheet is missing");
@@ -73,7 +76,7 @@ public class LiteTypeApp extends Application {
     }
 
     /**
-     * Takes the keys that make no character: Enter, Backspace, Ctrl+Backspace, and Escape.
+     * Takes the keys that make no character: Enter, Backspace, Ctrl+Backspace, Escape, and Tab.
      */
     private void keyPressed(KeyEvent event) {
         long now = System.nanoTime();
@@ -81,6 +84,10 @@ public class LiteTypeApp extends Application {
 
         if (code == KeyCode.ESCAPE) {
             newRun();
+        } else if (code == KeyCode.TAB) {
+            kind = kind == TextKind.WORDS ? TextKind.CODE : TextKind.WORDS;
+            newRun();
+            event.consume();
         } else if (code == KeyCode.ENTER) {
             run.type('\n', now);
             afterKey();
@@ -108,8 +115,11 @@ public class LiteTypeApp extends Application {
     }
 
     private void newRun() {
-        run = Run.untimed(StandInText.words(WORD_COUNT));
-        view = new TypingView(run, WORD_LINES);
+        Iterator<Word> text = kind == TextKind.WORDS
+            ? StandInText.words(WORD_COUNT)
+            : StandInText.snippet();
+        run = Run.untimed(text, kind.advance());
+        view = new TypingView(run, kind);
         root.setCenter(view);
         status.setText("");
     }

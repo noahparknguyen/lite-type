@@ -1,6 +1,8 @@
 package dev.noahpn.litetype.app;
 
 import dev.noahpn.litetype.core.Run;
+import dev.noahpn.litetype.core.Separator;
+import dev.noahpn.litetype.core.TypedWord;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -30,7 +32,7 @@ final class TypingView extends Pane {
     private static final Duration BLINK = Duration.millis(530);
 
     private final Run run;
-    private final int visibleLines;
+    private final TextKind kind;
     // The words on screen, in order: the first is word firstWord in the run.
     private final List<WordNode> shown = new ArrayList<>();
     // Where each line that scrolled off the top began, latest first, for Backspace to return to.
@@ -49,13 +51,13 @@ final class TypingView extends Pane {
     /**
      * Creates a view of a run.
      *
-     * @param run          the run to show
-     * @param visibleLines how many lines of text show at once
+     * @param run  the run to show
+     * @param kind whether the run's text is words or code
      */
-    TypingView(Run run, int visibleLines) {
+    TypingView(Run run, TextKind kind) {
         this.run = run;
-        this.visibleLines = visibleLines;
-        getStyleClass().add("typing-view");
+        this.kind = kind;
+        getStyleClass().addAll("typing-view", kind.styleClass());
 
         // Positions are set by hand, so the pane never needs to lay these out. The cursor is
         // added last to draw on top.
@@ -117,7 +119,8 @@ final class TypingView extends Pane {
         placeWords();
 
         // Reaching the bottom line moves everything up one, dropping the top line.
-        while (visibleLines > 1 && (cursorLine < 0 || cursorLine == visibleLines - 1)
+        int bottom = kind.visibleLines() - 1;
+        while (bottom > 0 && (cursorLine < 0 || cursorLine == bottom)
             && secondLineStart > firstWord) {
             linesAbove.push(firstWord);
             moveWindowTo(secondLineStart);
@@ -146,9 +149,11 @@ final class TypingView extends Pane {
     }
 
     /**
-     * Places the words from firstWord on, line by line, until the window is full. Words that no
-     * longer fit are taken off screen, and words coming into view are made. Records the cursor's
-     * line and the column where its word starts, or line -1 if the word is out of view.
+     * Places the words from firstWord on, line by line, until the window is full. A line ends
+     * where a word doesn't fit or where code has a line break, and a line of code starts at its
+     * indentation. Words that no longer fit are taken off screen, and words coming into view are
+     * made. Records the cursor's line and the column where its word starts, or line -1 if the
+     * word is out of view.
      */
     private void placeWords() {
         int columns = Math.max(1, (int) (getWidth() / cellWidth));
@@ -156,27 +161,37 @@ final class TypingView extends Pane {
         int line = 0;
         int column = 0;
         int count = 0;
+        boolean lineStart = true;
 
         cursorLine = -1;
         secondLineStart = firstWord;
 
-        for (int i = firstWord; run.hasWord(i); i++, count++) {
-            WordNode node = count < shown.size() ? shown.get(count) : add(i);
-            int width = node.cells();
+        for (int i = firstWord; run.hasWord(i); i++) {
+            TypedWord word = run.word(i);
+            int width = word.length();
 
-            if (column > 0 && column + width > columns) {
+            // Code is written to fit, so it wraps only in a window too narrow for 80 characters.
+            if (!lineStart && column + width > columns) {
                 line++;
-                column = 0;
+                lineStart = true;
 
                 if (line == 1) {
                     secondLineStart = i;
                 }
             }
 
-            if (line == visibleLines) {
+            // Checked before making a node, so a word just past the window costs nothing.
+            if (line == kind.visibleLines()) {
                 break;
             }
 
+            if (lineStart) {
+                column = word.word().indent();
+                lineStart = false;
+            }
+
+            WordNode node = count < shown.size() ? shown.get(count) : add(word);
+            count++;
             node.setLayoutX(column * cellWidth);
             node.setLayoutY(line * lineHeight);
 
@@ -187,6 +202,15 @@ final class TypingView extends Pane {
 
             // One cell after the letters is the gap, where a wrong separator shows.
             column += width + 1;
+
+            if (word.word().separator() == Separator.LINE_BREAK) {
+                line++;
+                lineStart = true;
+
+                if (line == 1) {
+                    secondLineStart = i + 1;
+                }
+            }
         }
 
         while (shown.size() > count) {
@@ -214,8 +238,8 @@ final class TypingView extends Pane {
         }
     }
 
-    private WordNode add(int index) {
-        WordNode node = new WordNode(run.word(index), cellWidth);
+    private WordNode add(TypedWord word) {
+        WordNode node = new WordNode(word, cellWidth);
         shown.add(node);
         words.getChildren().add(node);
         return node;

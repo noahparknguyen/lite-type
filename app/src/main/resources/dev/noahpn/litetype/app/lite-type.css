@@ -9,7 +9,15 @@
    never measures text again. */
 .typing-view {
     -fx-font-family: "JetBrains Mono";
+}
+
+.typing-view.words {
     -fx-font-size: 28px;
+}
+
+/* At 0.6 of the size per character, 80 characters of code are 960px wide. */
+.typing-view.code {
+    -fx-font-size: 20px;
 }
 
 .letter {
@@ -36,13 +44,17 @@
     -fx-fill: transparent;
 }
 
-.separator.line-break {
+/* Every state below is a pseudo-class, so these rules rank equally and the last match wins.
+   JavaFX ranks one style class above any number of pseudo-classes, so a style class here would
+   win over :wrong wherever it sat. */
+.separator:line-break {
     -fx-fill: #4a4d52;
 }
 
 .separator:wrong {
     -fx-fill: #f75464;
 }
+
 
 .cursor {
     -fx-background-color: #e8e8e8;

@@ -16,6 +16,9 @@ import java.util.Optional;
  * The clock starts on the first key that changes anything. A timed run ends exactly on its
  * deadline. An untimed run ends on the last letter of its text, right or wrong.
  *
+ * <p>The cursor moves through the text by word or by character, as the run's {@link Advance}
+ * says.
+ *
  * <p>Words are taken from the text only as they're needed, so the text can be endless. The run
  * isn't safe to share between threads; it's built to be called from one.
  */
@@ -25,6 +28,7 @@ public final class Run {
     private final List<TypedWord> words = new ArrayList<>();
     // Null for an untimed run.
     private final Duration limit;
+    private final Advance advance;
 
     private int current;
     private int correctKeys;
@@ -36,9 +40,10 @@ public final class Run {
     private boolean finished;
     private long endNanos;
 
-    private Run(Iterator<Word> source, Duration limit) {
+    private Run(Iterator<Word> source, Duration limit, Advance advance) {
         this.source = Objects.requireNonNull(source, "source must not be null");
         this.limit = limit;
+        this.advance = Objects.requireNonNull(advance, "advance must not be null");
 
         if (!hasWord(0)) {
             throw new IllegalArgumentException("source must hold at least one word");
@@ -46,7 +51,7 @@ public final class Run {
     }
 
     /**
-     * Creates a run that ends on the last letter of its text.
+     * Creates a run that ends on the last letter of its text, moving by word.
      *
      * @param source the words to type, in order; must hold at least one
      * @return the run, waiting for its first key
@@ -54,11 +59,24 @@ public final class Run {
      * @throws IllegalArgumentException if {@code source} holds no words
      */
     public static Run untimed(Iterator<Word> source) {
-        return new Run(source, null);
+        return untimed(source, Advance.BY_WORD);
     }
 
     /**
-     * Creates a run that ends when {@code limit} has passed since its first key.
+     * Creates a run that ends on the last letter of its text.
+     *
+     * @param source  the words to type, in order; must hold at least one
+     * @param advance how the cursor moves through the text
+     * @return the run, waiting for its first key
+     * @throws NullPointerException     if {@code source} or {@code advance} is null
+     * @throws IllegalArgumentException if {@code source} holds no words
+     */
+    public static Run untimed(Iterator<Word> source, Advance advance) {
+        return new Run(source, null, advance);
+    }
+
+    /**
+     * Creates a run that ends when {@code limit} has passed since its first key, moving by word.
      *
      * @param source the words to type, in order; normally endless
      * @param limit  how long the run lasts; must be positive
@@ -68,20 +86,38 @@ public final class Run {
      *                                  positive
      */
     public static Run timed(Iterator<Word> source, Duration limit) {
+        return timed(source, limit, Advance.BY_WORD);
+    }
+
+    /**
+     * Creates a run that ends when {@code limit} has passed since its first key.
+     *
+     * @param source  the words to type, in order; normally endless
+     * @param limit   how long the run lasts; must be positive
+     * @param advance how the cursor moves through the text
+     * @return the run, waiting for its first key
+     * @throws NullPointerException     if any argument is null
+     * @throws IllegalArgumentException if {@code source} holds no words or {@code limit} is not
+     *                                  positive
+     */
+    public static Run timed(Iterator<Word> source, Duration limit, Advance advance) {
         Objects.requireNonNull(limit, "limit must not be null");
 
         if (!limit.isPositive()) {
             throw new IllegalArgumentException("limit must be positive: " + limit);
         }
 
-        return new Run(source, limit);
+        return new Run(source, limit, advance);
     }
 
     /**
-     * Takes a key that makes a character. Space ends the current word, and so does Enter, given as
-     * {@code '\n'}. Either one on an empty word is ignored, and so is Tab. In the last word, Space
-     * and Enter are ordinary letters, since there's no next word to move to. A letter past the
-     * extra-letter cap is ignored.
+     * Takes a key that makes a character, with Enter given as {@code '\n'}. Space or Enter on an
+     * empty word is ignored, and so is Tab.
+     *
+     * <p>Moving by word, Space ends the current word, and so does Enter. In the last word they're
+     * ordinary letters, since there's no next word to move to. A letter past the extra-letter cap
+     * is ignored. Moving by character, every key fills exactly the next position, right or
+     * wrong.
      *
      * @param key       the character the key made
      * @param timeNanos when it was pressed
@@ -96,7 +132,13 @@ public final class Run {
         TypedWord word = words.get(current);
         boolean separator = key == ' ' || key == '\n';
 
+        // Neither key can be a word's first character, so this never ignores a right key.
         if (separator && word.isEmpty()) {
+            return;
+        }
+
+        if (advance == Advance.BY_CHARACTER) {
+            typeByCharacter(word, key, timeNanos);
             return;
         }
 
@@ -113,11 +155,7 @@ public final class Run {
 
         startAt(timeNanos);
         count(word.type(key));
-
-        boolean lastWord = !hasWord(current + 1);
-        if (lastWord && word.typedLength() == word.word().text().length()) {
-            finish(timeNanos);
-        }
+        finishIfLastLetter(word, timeNanos);
     }
 
     /**
@@ -287,6 +325,30 @@ public final class Run {
      */
     int wrongKeys() {
         return wrongKeys;
+    }
+
+    /**
+     * Applies a key moving by character: inside a word it's typed in, right or wrong, and at a
+     * word's end it ends the word, right only if it's that word's separator. Either way the
+     * cursor moves one position, so letters can never pile up past a word's end.
+     */
+    private void typeByCharacter(TypedWord word, char key, long timeNanos) {
+        startAt(timeNanos);
+
+        if (word.typedLength() < word.word().text().length()) {
+            count(word.type(key));
+            finishIfLastLetter(word, timeNanos);
+        } else if (hasWord(current + 1)) {
+            count(word.end(key));
+            current++;
+        }
+    }
+
+    private void finishIfLastLetter(TypedWord word, long timeNanos) {
+        boolean lastWord = !hasWord(current + 1);
+        if (lastWord && word.typedLength() == word.word().text().length()) {
+            finish(timeNanos);
+        }
     }
 
     private void advanceTo(long timeNanos) {
