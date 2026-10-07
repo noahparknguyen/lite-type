@@ -13,6 +13,7 @@
 
   <modules>
     <module>core</module>
+    <module>app</module>
   </modules>
 
   <properties>
@@ -29,7 +30,24 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-controls</artifactId>
+        <version>25.0.4</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-maven-plugin</artifactId>
+          <version>0.0.8</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
 </project>
