@@ -43,6 +43,7 @@ public class LiteTypeApp extends Application {
     private static final String FONT = "/fonts/JetBrainsMono-Regular.ttf";
     private static final String THEME_KEY = "theme";
     private static final String TEXT_SIZE_KEY = "textSize";
+    private static final String PROGRESS_KEY = "progress";
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
     // What some systems type for Ctrl+Backspace or Delete. Neither is a letter.
     private static final char DELETE = 127;
@@ -59,12 +60,14 @@ public class LiteTypeApp extends Application {
 
     private final Preferences preferences = Preferences.userNodeForPackage(LiteTypeApp.class);
     private final BorderPane root = new BorderPane();
-    private final Label progress = new Label();
+    private final Label progressNumber = new Label();
+    private final ProgressLine progressLine = new ProgressLine();
     private ChoicesBar bar;
     private Choices choices;
     private List<String> themes;
     private String theme;
     private TextSize textSize;
+    private ProgressStyle progressStyle;
     private double surroundsSize;
     private List<String> words;
     private Map<SnippetSize, List<List<Word>>> snippets;
@@ -76,7 +79,7 @@ public class LiteTypeApp extends Application {
     private Showing showing = Showing.TEXT;
 
     // In Length mode: how many words or lines the text has, and for code, the line each word is
-    // on, worked out once per run so the progress number costs nothing per key.
+    // on, worked out once per run so showing progress costs nothing per key.
     private int total;
     private int[] lineOfWord;
     private int shownProgress;
@@ -95,18 +98,15 @@ public class LiteTypeApp extends Application {
             theme = themes.getFirst();
         }
 
-        try {
-            textSize = TextSize.valueOf(preferences.get(TEXT_SIZE_KEY, TextSize.FIT.name()));
-        } catch (IllegalArgumentException e) {
-            textSize = TextSize.FIT;
-        }
+        textSize = loadSetting(TEXT_SIZE_KEY, TextSize.FIT);
+        progressStyle = loadSetting(PROGRESS_KEY, ProgressStyle.LINE);
 
         choices = Choices.load(preferences);
         bar = new ChoicesBar(choices, this::choose, theme, this::openThemes, this::openSettings);
         BorderPane.setAlignment(bar, Pos.TOP_CENTER);
         root.setTop(bar);
         root.getStyleClass().add(Themes.styleClass(theme));
-        progress.getStyleClass().add("counter");
+        progressNumber.getStyleClass().add("counter");
 
         // As tall as the bar, at the bottom, so the space between them is centred on the window,
         // and the test centred in that space sits in the window's middle.
@@ -202,7 +202,8 @@ public class LiteTypeApp extends Application {
 
     /**
      * Shows the results once the run has ended. Until then, fades the bar while typing and keeps
-     * the number above the text current, setting its text only when the number changes.
+     * the progress above the text current: the line by its share, or the number's text, set only
+     * when the number changes.
      */
     private void updateStatus() {
         if (run.isFinished()) {
@@ -212,13 +213,18 @@ public class LiteTypeApp extends Application {
 
         bar.setTyping(run.isStarted());
 
+        if (progressStyle == ProgressStyle.LINE) {
+            progressLine.setShare(progressShare());
+            return;
+        }
+
         int value = progressValue();
         if (value != shownProgress) {
             shownProgress = value;
             String text = choices.mode() == Mode.TIME
                 ? String.valueOf(value)
                 : value + " / " + total;
-            progress.setText(text);
+            progressNumber.setText(text);
         }
     }
 
@@ -234,6 +240,26 @@ public class LiteTypeApp extends Application {
 
         int current = run.currentWordIndex();
         return choices.kind() == TextKind.WORDS ? current : lineOfWord[current];
+    }
+
+    /**
+     * Returns how much of the line is filled, from 0 to 1: the time used in Timed mode, to the
+     * nanosecond so it fills smoothly, or the share of words or lines typed in Length mode.
+     */
+    private double progressShare() {
+        if (choices.mode() == Mode.TIME) {
+            double limitNanos = choices.seconds() * (double) NANOS_PER_SECOND;
+            return 1 - run.timeLeft().orElseThrow().toNanos() / limitNanos;
+        }
+
+        return (double) progressValue() / total;
+    }
+
+    /**
+     * Returns what shows the progress above the text, by the setting: the line or the number.
+     */
+    private Region progressView() {
+        return progressStyle == ProgressStyle.LINE ? progressLine : progressNumber;
     }
 
     /**
@@ -264,13 +290,35 @@ public class LiteTypeApp extends Application {
         showing = Showing.SETTINGS;
         bar.setTyping(false);
         bar.setSettingsOpen(true);
-        showCentre(new SettingsPage(textSize, this::pickTextSize));
+        showCentre(new SettingsPage(
+            textSize, this::pickTextSize, progressStyle, this::pickProgress));
     }
 
     private void pickTextSize(TextSize size) {
         textSize = size;
         preferences.put(TEXT_SIZE_KEY, size.name());
         applySizes();
+    }
+
+    /**
+     * Saves the progress style. It shows from the next run, which leaving the page starts.
+     */
+    private void pickProgress(ProgressStyle style) {
+        progressStyle = style;
+        preferences.put(PROGRESS_KEY, style.name());
+    }
+
+    /**
+     * Reads a setting saved by name. A missing one, or one whose value no longer exists, falls
+     * back to the default.
+     */
+    private <E extends Enum<E>> E loadSetting(String key, E fallback) {
+        try {
+            String saved = preferences.get(key, fallback.name());
+            return Enum.valueOf(fallback.getDeclaringClass(), saved);
+        } catch (IllegalArgumentException e) {
+            return fallback;
+        }
     }
 
     /**
@@ -297,19 +345,21 @@ public class LiteTypeApp extends Application {
             return;
         }
 
-        // The bar, the spacer as tall as it, and the counter take height from the text. They're
-        // sized in em, so together they're a fixed number of pixels tall for each pixel of the
-        // base size, measured here at the current one. The first time, there's no base size yet,
-        // so it starts from what the text alone would allow. Off screen, the counter keeps the
-        // size it last had, which is close enough: showing the text runs this again.
+        // The bar, the spacer as tall as it, and the progress above the text take height from the
+        // text. They're sized in em, so together they're a fixed number of pixels tall for each
+        // pixel of the base size, measured here at the current one. The first time, there's no
+        // base size yet, so it starts from what the text alone would allow. Off screen, the
+        // progress keeps the size it last had, which is close enough: showing the text runs this
+        // again.
         if (surroundsSize == 0) {
             setSurrounds(textSize.codeSize(width, height, 0));
         }
 
         // Styles normally apply just before a frame is drawn. They're applied now, so the bar and
-        // the counter are measured as they'll be drawn: at the current base size, and with any
+        // the progress are measured as they'll be drawn: at the current base size, and with any
         // buttons a choice just rebuilt, which have no styles yet.
         bar.applyCss();
+        Region progress = progressView();
         progress.applyCss();
         double surroundsShare = (2 * bar.prefHeight(-1) + progress.prefHeight(-1)) / surroundsSize;
         double code = textSize.codeSize(width, height, surroundsShare);
@@ -381,7 +431,7 @@ public class LiteTypeApp extends Application {
             countText();
         }
 
-        VBox text = new VBox(progress, view);
+        VBox text = new VBox(progressView(), view);
         text.getStyleClass().add("typing-area");
         showCentre(text);
         updateStatus();

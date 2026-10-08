@@ -7,9 +7,11 @@
    -lt-wrong    a wrong letter, and a wrong key at the end of a word
    -lt-extra    a letter typed past the end of a word
    -lt-missed   a letter skipped by an early Space
-   -lt-mark     the ⏎ at the end of a line of code, before it's typed, and quiet outlines
+   -lt-mark     the ⏎ at the end of a line of code, before it's typed, quiet outlines, and the
+                progress line's full length
    -lt-cursor   the cursor
-   -lt-accent   the counter, and what's picked on the theme page
+   -lt-accent   the progress, as a number or the filled part of the line, and what's picked on
+                the theme page
    -lt-dim      quiet labels and hints
    -lt-soft     secondary text, such as the accuracies
 
@@ -155,6 +157,22 @@
     -fx-padding: 0 0 0.4em 0;
 }
 
+/* The line that can stand in for the number, a setting (Noah, 2026-10-08): its full length
+   faint, the part done in the accent colour. The thickness is in em, so it grows with the text
+   like the number does, and the padding is the gap above the text. */
+.progress-line {
+    -fx-padding: 0 0 1.4em 0;
+}
+
+.progress-track {
+    -fx-background-color: -lt-mark;
+    -fx-pref-height: 0.15em;
+}
+
+.progress-fill {
+    -fx-background-color: -lt-accent;
+}
+
 .results {
     -fx-spacing: 0.429em;
 }
@@ -194,7 +212,13 @@
     -fx-spacing: 0.571em;
 }
 
+/* Each setting is a group: its name, its choices, and a note. The gap between settings is wider
+   than the gaps inside one, so each reads as a unit. */
 .settings-page {
+    -fx-spacing: 1.714em;
+}
+
+.setting {
     -fx-spacing: 0.714em;
 }
 
