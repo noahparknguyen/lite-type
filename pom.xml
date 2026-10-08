@@ -57,7 +57,9 @@
           <version>3.6.0</version>
           <configuration>
             <systemPropertyVariables>
-              <!-- Tests that save settings save them under target/, never in the user's own. -->
+              <!-- Tests that save settings save them under target/ on Linux and macOS. Windows
+                   keeps settings in the registry and ignores this, so each test also uses a
+                   node of its own, never the app's, and removes it afterwards. -->
               <java.util.prefs.userRoot>${project.build.directory}/test-prefs</java.util.prefs.userRoot>
             </systemPropertyVariables>
           </configuration>

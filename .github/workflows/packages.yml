@@ -1,0 +1,73 @@
+# Builds lite-type's native packages on the two systems they are made for: an installer and a
+# portable zip on Windows, a .deb and a portable tar.gz on Linux. jpackage cannot build for
+# another system, so each is built on its own. The packages are kept as the run's artifacts, to
+# download and try.
+name: Packages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  # The Release workflow builds its files here too, so what is released is built exactly as
+  # every push to main is.
+  workflow_call:
+    inputs:
+      release:
+        description: Build for a release, with nothing taken from the cache.
+        type: boolean
+        default: false
+
+# Read the code, nothing more: the packages are kept as the run's artifacts, which needs no
+# write access to the repository.
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      # One system failing should not stop the other: both results are worth seeing.
+      fail-fast: false
+      matrix:
+        # Pinned, not -latest, so a new runner image never changes a package unannounced.
+        os: [ windows-2025, ubuntu-24.04 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Each action is pinned to a commit, not a tag: a tag can be moved to other code by
+      # whoever controls it, a commit cannot. Dependabot proposes updates. The checkout
+      # keeps no token behind, since nothing here pushes.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Temurin 25, the JDK the POM compiles for. Its jpackage builds the packages, and its
+      # jlink cuts the runtime they carry. A release takes nothing from the cache: what it
+      # ships comes from the tagged code and fresh downloads alone, never from files an
+      # earlier run left behind.
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: ${{ !inputs.release && 'maven' || '' }}
+
+      # Through the Maven Wrapper, as anyone building from source runs it: mvnw on Linux,
+      # mvnw.cmd on Windows. The tests run on each system, so a failure only Windows shows
+      # turns up here.
+      - name: Test and package the jars
+        if: runner.os == 'Linux'
+        run: ./mvnw --batch-mode verify
+
+      - name: Test and package the jars
+        if: runner.os == 'Windows'
+        run: ./mvnw.cmd --batch-mode verify
+
+      # Git Bash on Windows, so one script serves both. The Windows installer needs WiX 3,
+      # which the windows-2025 image has.
+      - name: Build the native packages
+        shell: bash
+        run: bash app/packaging/package.sh
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages-${{ runner.os }}
+          path: app/target/packages/
+          if-no-files-found: error
