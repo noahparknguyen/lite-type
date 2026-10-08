@@ -130,4 +130,18 @@ class ResultsTest {
         Run run = Run.untimed(text("the fox"));
         assertThrows(IllegalStateException.class, () -> Results.of(run));
     }
+
+    @Test
+    void oneMistakeNeverShowsAsAPerfectScore() {
+        Results results = new Results(0, 299.0 / 300, 299.0 / 300, Duration.ZERO);
+        assertEquals(99, results.accuracyPercent());
+        assertEquals(99, results.textAccuracyPercent());
+        assertEquals(100, new Results(0, 1, 1, Duration.ZERO).accuracyPercent());
+    }
+
+    @Test
+    void aShareStoredAHairUnderAWholePercentKeepsIt() {
+        // 57 / 100 is stored as 0.56999..., and times 100 that's 56.99999999999999.
+        assertEquals(57, new Results(0, 57.0 / 100, 0, Duration.ZERO).accuracyPercent());
+    }
 }

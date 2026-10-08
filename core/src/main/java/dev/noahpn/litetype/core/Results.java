@@ -71,6 +71,34 @@ public record Results(double wpm, double accuracy, double textAccuracy, Duration
     }
 
     /**
+     * Returns the accuracy as a whole percentage, rounded down, so 100 only ever means every key
+     * was right: 299 right of 300 is 99, not 100.
+     *
+     * @return the accuracy, from 0 to 100
+     */
+    public int accuracyPercent() {
+        return wholePercent(accuracy);
+    }
+
+    /**
+     * Returns the text accuracy as a whole percentage, rounded down, so 100 only ever means the
+     * whole text ended up right.
+     *
+     * @return the text accuracy, from 0 to 100
+     */
+    public int textAccuracyPercent() {
+        return wholePercent(textAccuracy);
+    }
+
+    /**
+     * Rounds a share down to a whole percentage. A share like 57 of 100 is stored a hair under
+     * 0.57, so a tiny tolerance keeps it at 57 rather than dropping it to 56.
+     */
+    private static int wholePercent(double share) {
+        return (int) Math.floor(share * 100 + 1e-9);
+    }
+
+    /**
      * Returns the characters a word earns toward WPM. A word the typist moved on from earns its
      * letters and the key after it, but only when all of them are right. The word still open at
      * the end earns the letters typed so far, if they're all right: the whole word when an untimed
