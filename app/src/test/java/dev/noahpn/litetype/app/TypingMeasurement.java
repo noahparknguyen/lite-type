@@ -6,6 +6,8 @@ import dev.noahpn.litetype.core.Texts;
 import dev.noahpn.litetype.core.Word;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
@@ -28,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -125,11 +128,13 @@ class TypingMeasurement {
         List<Long> frameGaps = new ArrayList<>();
         CompletableFuture<Void> done = new CompletableFuture<>();
         String theme = Themes.names().getFirst();
+        double fontSize = kind == TextKind.WORDS ? WORDS_SIZE : CODE_SIZE;
+        double[] cell = new double[1];
 
         Platform.runLater(() -> {
             // Fixed sizes and the default theme, so every measurement compares with the last.
             TypingView view = new TypingView(run, kind);
-            view.setFontSize(kind == TextKind.WORDS ? WORDS_SIZE : CODE_SIZE);
+            view.setFontSize(fontSize);
             BorderPane root = new BorderPane(view);
             Scene scene = new Scene(root, 1080, 360);
             scene.getStylesheets().addAll(LiteTypeApp.stylesheet(), Themes.stylesheet(theme));
@@ -162,6 +167,7 @@ class TypingMeasurement {
 
                     if (next == keys.size()) {
                         stop();
+                        cell[0] = letterSpacing(view);
                         save(scene, kind + "-end.png");
                         stage.close();
                         done.complete(null);
@@ -195,6 +201,26 @@ class TypingMeasurement {
 
         assertTrue(run.isFinished(), kind + ": the scripted typist didn't finish the text");
         assertTrue(median < KEY_BUDGET_NANOS, kind + ": the median key took over 1 ms");
+        // A view measured in the wrong font lays its letters out on top of each other, and the
+        // timing then measures that broken layout, which happened unnoticed for a while.
+        assertEquals(TextSize.CHARACTER_WIDTH * fontSize, cell[0], 0.5,
+            kind + ": the letters weren't one cell apart, so the view was laid out wrong");
+    }
+
+    /**
+     * Returns the distance between the first two letters of a word on screen, which is one cell
+     * when the view was measured in the right font.
+     */
+    private static double letterSpacing(TypingView view) {
+        for (Node node : view.lookupAll(".word")) {
+            List<Node> letters = ((Group) node).getChildren().stream()
+                .filter(child -> child.getStyleClass().contains("letter"))
+                .toList();
+            if (letters.size() >= 2) {
+                return letters.get(1).getLayoutX() - letters.get(0).getLayoutX();
+            }
+        }
+        return 0;
     }
 
     /**

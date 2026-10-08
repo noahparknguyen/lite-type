@@ -90,8 +90,10 @@ final class TypingView extends Pane {
      * Sets the size of the text. Its size depends on the window, so it's set here rather than in
      * the stylesheet, which still sets the font itself. Every position is measured in cells of
      * the old size, so the cells are measured again and every word is rebuilt. That happens when
-     * the window or the setting changes, never on a key. Measured at once rather than on the next
-     * refresh, so the view's height is right before it's first laid out.
+     * the window or the setting changes, never on a key. On screen, the cells are measured at
+     * once, so the view's height is right before it's laid out. Off screen, the stylesheet hasn't
+     * reached the view, so a letter would measure in the default font: the measuring waits for
+     * the first refresh once the view is shown.
      *
      * @param size the font size in pixels
      */
@@ -102,7 +104,11 @@ final class TypingView extends Pane {
 
         fontSize = size;
         setStyle("-fx-font-size: " + size + "px;");
-        measure();
+        if (getScene() != null) {
+            measure();
+        } else {
+            cellWidth = 0;
+        }
         shown.clear();
         words.getChildren().clear();
         linesAbove.clear();
