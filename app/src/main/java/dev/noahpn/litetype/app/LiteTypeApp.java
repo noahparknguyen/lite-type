@@ -14,6 +14,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -41,6 +42,9 @@ import java.util.random.RandomGenerator;
 public class LiteTypeApp extends Application {
 
     private static final String FONT = "/fonts/JetBrainsMono-Regular.ttf";
+    // The window's icon sizes. The system picks what it needs: 16 and 32 at normal scaling, 24 and
+    // 48 at 150% and 200%. WSLg scales the largest for the taskbar, so 96 keeps it sharp there.
+    static final int[] ICON_SIZES = {16, 24, 32, 48, 96};
     private static final String THEME_KEY = "theme";
     private static final String TEXT_SIZE_KEY = "textSize";
     private static final String PROGRESS_KEY = "progress";
@@ -146,6 +150,7 @@ public class LiteTypeApp extends Application {
         }.start();
 
         stage.setTitle("lite-type");
+        addIcons(stage);
         stage.setScene(scene);
         stage.setMinWidth(MIN_WIDTH);
         stage.setMinHeight(MIN_HEIGHT);
@@ -500,6 +505,29 @@ public class LiteTypeApp extends Application {
                 throw new IllegalStateException("could not load the font " + FONT);
             }
         }
+    }
+
+    /**
+     * Gives the window its icon in every size. A missing one is skipped rather than stopping the
+     * app over an icon: {@code IconsTest} fails the build if any is missing.
+     */
+    private static void addIcons(Stage stage) {
+        for (int size : ICON_SIZES) {
+            URL icon = LiteTypeApp.class.getResource(iconPath(size));
+            if (icon != null) {
+                stage.getIcons().add(new Image(icon.toExternalForm()));
+            }
+        }
+    }
+
+    /**
+     * Returns where the icon of one size is, among the resources. Package-private for the test.
+     *
+     * @param size the icon's width and height in pixels
+     * @return the icon's resource path
+     */
+    static String iconPath(int size) {
+        return "/icons/lite-type-" + size + ".png";
     }
 
     /**
