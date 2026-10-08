@@ -1,11 +1,13 @@
 package dev.noahpn.litetype.app;
 
 import dev.noahpn.litetype.app.Choices.Mode;
+import dev.noahpn.litetype.app.Choices.SnippetSize;
 import dev.noahpn.litetype.core.Advance;
 import dev.noahpn.litetype.core.Results;
 import dev.noahpn.litetype.core.Run;
 import dev.noahpn.litetype.core.Separator;
 import dev.noahpn.litetype.core.Texts;
+import dev.noahpn.litetype.core.Word;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -23,6 +25,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 import java.util.random.RandomGenerator;
@@ -45,6 +48,9 @@ public class LiteTypeApp extends Application {
     private ChoicesBar bar;
     private Choices choices;
     private List<String> words;
+    private Map<SnippetSize, List<List<Word>>> snippets;
+    // Every snippet, for Timed mode, which mixes all sizes.
+    private List<List<Word>> allSnippets;
     private long seed;
     private Run run;
     private TypingView view;
@@ -60,6 +66,8 @@ public class LiteTypeApp extends Application {
     public void start(Stage stage) throws IOException {
         loadFont();
         words = Content.words();
+        snippets = Content.snippets();
+        allSnippets = snippets.values().stream().flatMap(List::stream).toList();
 
         choices = Choices.load(preferences);
         bar = new ChoicesBar(choices, this::choose);
@@ -219,8 +227,8 @@ public class LiteTypeApp extends Application {
                 ? Run.timed(Texts.endlessWords(words, seed), limit, advance)
                 : Run.untimed(Texts.words(words, choices.words(), seed), advance);
             case CODE -> timed
-                ? Run.timed(StandInText.endlessSnippets(seed), limit, advance)
-                : Run.untimed(StandInText.snippet(choices.size(), seed), advance);
+                ? Run.timed(Texts.endlessSnippets(allSnippets, seed), limit, advance)
+                : Run.untimed(Texts.snippet(snippets.get(choices.size()), seed), advance);
         };
     }
 
@@ -229,20 +237,20 @@ public class LiteTypeApp extends Application {
      * word is on and how many lines there are.
      */
     private void countText() {
-        int words = 0;
-        while (run.hasWord(words)) {
-            words++;
+        int count = 0;
+        while (run.hasWord(count)) {
+            count++;
         }
 
         if (choices.kind() == TextKind.WORDS) {
-            total = words;
+            total = count;
             return;
         }
 
-        lineOfWord = new int[words];
+        lineOfWord = new int[count];
         int line = 0;
 
-        for (int i = 0; i < words; i++) {
+        for (int i = 0; i < count; i++) {
             lineOfWord[i] = line;
             if (run.word(i).word().separator() == Separator.LINE_BREAK) {
                 line++;

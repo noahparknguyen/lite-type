@@ -1,0 +1,50 @@
+# Short Java snippets: 4 to 8 typed lines each. Blank lines aren't typed, so they don't count.
+# Snippets are separated by a line holding only ---. A line starting with # is a note, not code,
+# and the note before each snippet records where it came from.
+
+# From lite-type's own source: core/src/main/java/dev/noahpn/litetype/core/Look.java, without
+# its Javadoc.
+public enum Look {
+    UNTYPED,
+    CORRECT,
+    WRONG,
+    MISSED,
+    EXTRA
+}
+---
+# Written for lite-type.
+record Point(int x, int y) {
+    Point {
+        if (x < 0 || y < 0) {
+            throw new IllegalArgumentException("negative coordinate");
+        }
+    }
+}
+---
+# Written for lite-type.
+static String season(int month) {
+    return switch (month) {
+        case 12, 1, 2 -> "winter";
+        case 3, 4, 5 -> "spring";
+        case 6, 7, 8 -> "summer";
+        default -> "autumn";
+    };
+}
+---
+# Written for lite-type.
+static int indexOf(int[] values, int target) {
+    for (int i = 0; i < values.length; i++) {
+        if (values[i] == target) {
+            return i;
+        }
+    }
+    return -1;
+}
+---
+# Written for lite-type.
+static String greeting(Optional<String> name) {
+    return name.map(String::strip)
+        .filter(n -> !n.isEmpty())
+        .map(n -> "Hello, " + n + "!")
+        .orElse("Hello!");
+}

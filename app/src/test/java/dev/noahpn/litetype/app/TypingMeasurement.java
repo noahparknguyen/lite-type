@@ -2,7 +2,6 @@ package dev.noahpn.litetype.app;
 
 import dev.noahpn.litetype.core.Run;
 import dev.noahpn.litetype.core.Separator;
-import dev.noahpn.litetype.core.SnippetParser;
 import dev.noahpn.litetype.core.Texts;
 import dev.noahpn.litetype.core.Word;
 import javafx.animation.AnimationTimer;
@@ -23,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -52,6 +52,7 @@ class TypingMeasurement {
     private static final Path OUT = Path.of("target", "measure");
     // A fixed seed types the same words every time, so one measurement compares with the next.
     private static final long SEED = 1;
+    private static final int CODE_WORDS = 400;
     private static final int SETTLE_FRAMES = 30;
     private static final int WARM_UP_KEYS = 100;
     private static final long LATE_FRAME_NANOS = 20_000_000;
@@ -99,9 +100,20 @@ class TypingMeasurement {
 
     @Test
     void code() throws Exception {
-        String source = (StandInText.SNIPPET + "\n").repeat(6);
-        Run run = Run.untimed(SnippetParser.parse(source).iterator(), TextKind.CODE.advance());
-        measure(TextKind.CODE, run);
+        // The shipped snippets back to back, cut to a fixed length so the run has an end.
+        List<List<Word>> snippets = Content.snippets().values().stream()
+            .flatMap(List::stream)
+            .toList();
+        Iterator<Word> endless = Texts.endlessSnippets(snippets, SEED);
+        List<Word> words = new ArrayList<>();
+
+        for (int i = 0; i < CODE_WORDS; i++) {
+            words.add(endless.next());
+        }
+
+        Word last = words.getLast();
+        words.set(words.size() - 1, new Word(last.text(), Separator.NONE, last.indent()));
+        measure(TextKind.CODE, Run.untimed(words.iterator(), TextKind.CODE.advance()));
     }
 
     private static void measure(TextKind kind, Run run) throws Exception {

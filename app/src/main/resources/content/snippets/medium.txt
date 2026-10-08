@@ -1,0 +1,63 @@
+# Medium Java snippets: 10 to 18 typed lines each. Blank lines aren't typed, so they don't count.
+# Snippets are separated by a line holding only ---. A line starting with # is a note, not code,
+# and the note before each snippet records where it came from.
+
+# From lite-type's own source: core/src/main/java/dev/noahpn/litetype/core/Separator.java,
+# without its Javadoc.
+public enum Separator {
+    SPACE,
+    LINE_BREAK,
+    NONE;
+
+    public boolean isTypedWith(char key) {
+        return switch (this) {
+            case SPACE -> key == ' ';
+            case LINE_BREAK -> key == '\n';
+            case NONE -> false;
+        };
+    }
+}
+---
+# Written for lite-type.
+static Map<String, Long> wordCounts(List<String> lines) {
+    return lines.stream()
+        .flatMap(line -> Arrays.stream(line.split(" ")))
+        .map(String::strip)
+        .filter(word -> !word.isEmpty())
+        .map(word -> word.toLowerCase(Locale.ROOT))
+        .collect(Collectors.groupingBy(
+            word -> word,
+            TreeMap::new,
+            Collectors.counting()));
+}
+---
+# Written for lite-type.
+static List<String> readTodos(Path file) throws IOException {
+    List<String> todos = new ArrayList<>();
+
+    try (BufferedReader reader = Files.newBufferedReader(file)) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("TODO")) {
+                todos.add(line.substring(4).strip());
+            }
+        }
+    }
+
+    return todos;
+}
+---
+# Written for lite-type.
+static <T extends Comparable<T>> T max(List<T> items) {
+    if (items.isEmpty()) {
+        throw new NoSuchElementException("no items");
+    }
+
+    T best = items.getFirst();
+    for (T item : items) {
+        if (item.compareTo(best) > 0) {
+            best = item;
+        }
+    }
+    return best;
+}

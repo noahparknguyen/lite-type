@@ -93,6 +93,16 @@ class TextsTest {
     }
 
     @Test
+    void snippetPicksOneWholeSnippetAndTheSameSeedPicksTheSameOne() {
+        List<List<Word>> snippets = List.of(
+            SnippetParser.parse("a();\nb();"),
+            SnippetParser.parse("c();\nd();"));
+        List<Word> picked = take(Texts.snippet(snippets, 9), 10);
+        assertTrue(snippets.contains(picked));
+        assertEquals(picked, take(Texts.snippet(snippets, 9), 10));
+    }
+
+    @Test
     void emptyContentThrows() {
         assertThrows(IllegalArgumentException.class, () -> Texts.words(List.of(), 10, 1));
         assertThrows(IllegalArgumentException.class, () -> Texts.endlessWords(List.of(), 1));

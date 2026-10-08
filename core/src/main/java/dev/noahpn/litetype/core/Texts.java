@@ -67,6 +67,20 @@ public final class Texts {
     }
 
     /**
+     * Returns one snippet picked at random, its last word with nothing after it.
+     *
+     * @param snippets the snippets to pick from, each as its words; must not be empty
+     * @param seed     where the random pick starts
+     * @return the picked snippet's words, in order
+     * @throws NullPointerException     if {@code snippets} is null
+     * @throws IllegalArgumentException if {@code snippets} is empty
+     */
+    public static Iterator<Word> snippet(List<List<Word>> snippets, long seed) {
+        requireSome(snippets, "snippets");
+        return snippets.get(new Random(seed).nextInt(snippets.size())).iterator();
+    }
+
+    /**
      * Returns code snippets back to back, never running out. Each snippet's last line ends with a
      * line break, so the next snippet starts on the next line. The order is shuffled, and no
      * snippet comes back until every one has been used.

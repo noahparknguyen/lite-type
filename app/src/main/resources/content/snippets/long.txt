@@ -1,0 +1,94 @@
+# Long Java snippets: 20 to 35 typed lines each. Blank lines aren't typed, so they don't count.
+# Snippets are separated by a line holding only ---. A line starting with # is a note, not code,
+# and the note before each snippet records where it came from.
+
+# From lite-type's own source: core/src/main/java/dev/noahpn/litetype/core/WpmCalculator.java,
+# without its Javadoc, and with one line broken in two to fit 80 characters.
+public final class WpmCalculator {
+
+    private static final int CHARACTERS_PER_WORD = 5;
+    private static final double NANOS_PER_MINUTE = 60_000_000_000.0;
+
+    private WpmCalculator() {
+    }
+
+    public static double calculate(int characterCount, Duration elapsed) {
+        Objects.requireNonNull(elapsed, "elapsed must not be null");
+
+        if (characterCount < 0) {
+            throw new IllegalArgumentException(
+                "characterCount must not be negative: " + characterCount);
+        }
+
+        if (!elapsed.isPositive()) {
+            throw new IllegalArgumentException(
+                "elapsed must be positive: " + elapsed);
+        }
+
+        double words = (double) characterCount / CHARACTERS_PER_WORD;
+        double minutes = elapsed.toNanos() / NANOS_PER_MINUTE;
+
+        return words / minutes;
+    }
+}
+---
+# Written for lite-type.
+record Item(String name, int priceCents, int quantity) {
+
+    Item {
+        Objects.requireNonNull(name);
+        if (priceCents < 0 || quantity < 0) {
+            throw new IllegalArgumentException("negative price or quantity");
+        }
+    }
+
+    int totalCents() {
+        return priceCents * quantity;
+    }
+}
+
+static String receipt(List<Item> items) {
+    StringBuilder text = new StringBuilder();
+
+    for (Item item : items) {
+        text.append(item.quantity())
+            .append(" x ")
+            .append(item.name())
+            .append('\n');
+    }
+
+    int total = items.stream().mapToInt(Item::totalCents).sum();
+    text.append("Total: $").append(total / 100).append('.')
+        .append(String.format("%02d", total % 100));
+    return text.toString();
+}
+---
+# Written for lite-type.
+static void mergeSort(int[] values) {
+    if (values.length < 2) {
+        return;
+    }
+
+    int middle = values.length / 2;
+    int[] left = Arrays.copyOfRange(values, 0, middle);
+    int[] right = Arrays.copyOfRange(values, middle, values.length);
+    mergeSort(left);
+    mergeSort(right);
+
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    while (i < left.length && j < right.length) {
+        if (left[i] <= right[j]) {
+            values[k++] = left[i++];
+        } else {
+            values[k++] = right[j++];
+        }
+    }
+    while (i < left.length) {
+        values[k++] = left[i++];
+    }
+    while (j < right.length) {
+        values[k++] = right[j++];
+    }
+}
