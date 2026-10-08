@@ -4,16 +4,18 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * What a finished run scored: its speed, and two accuracies. Accuracy counts every keypress, so
- * a mistake still costs something after it's fixed. Text accuracy looks only at the text as it
- * ended, so fixing every mistake gives 100%.
+ * What a finished run scored: its speed, two accuracies, and how long it took. Accuracy counts
+ * every keypress, so a mistake still costs something after it's fixed. Text accuracy looks only
+ * at the text as it ended, so fixing every mistake gives 100%.
  *
  * @param wpm          words per minute, counting only fully correct words, unrounded
  * @param accuracy     right keypresses as a share of all keypresses, from 0 to 1
  * @param textAccuracy characters that ended up right, as a share of the characters reached,
  *                     from 0 to 1
+ * @param elapsed      how long the run took: exactly the limit for a timed run, otherwise the
+ *                     time from the first key to the last
  */
-public record Results(double wpm, double accuracy, double textAccuracy) {
+public record Results(double wpm, double accuracy, double textAccuracy, Duration elapsed) {
 
     /**
      * Works out the results of a finished run. A run that took no time at all, a single letter
@@ -65,7 +67,7 @@ public record Results(double wpm, double accuracy, double textAccuracy) {
 
         double wpm = elapsed.isZero() ? 0 : WpmCalculator.calculate(wpmCharacters, elapsed);
 
-        return new Results(wpm, accuracy, textAccuracy);
+        return new Results(wpm, accuracy, textAccuracy, elapsed);
     }
 
     /**

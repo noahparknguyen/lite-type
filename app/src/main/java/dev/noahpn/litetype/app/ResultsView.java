@@ -6,8 +6,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /**
- * A finished run's results, shown where the text was: WPM large, then the two accuracies, then
- * what the run was, and the keys that start another. Every number is a whole number.
+ * A finished run's results, shown where the text was and centred: WPM large, then the two
+ * accuracies, then what the run was, and the keys that start another. Every number is a whole
+ * number.
  */
 final class ResultsView extends VBox {
 
@@ -15,7 +16,7 @@ final class ResultsView extends VBox {
      * Creates the view.
      *
      * @param results     the run's results
-     * @param description what the run was, such as {@code words · 25}
+     * @param description what the run was, such as {@code words · 25 · 18 s}
      */
     ResultsView(Results results, String description) {
         getStyleClass().add("results");

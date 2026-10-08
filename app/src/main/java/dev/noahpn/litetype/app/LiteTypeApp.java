@@ -236,10 +236,21 @@ public class LiteTypeApp extends Application {
         return choices.kind() == TextKind.WORDS ? current : lineOfWord[current];
     }
 
+    /**
+     * Shows the results where the text was. A timed run's description already says its time, so
+     * only a run that ends with its text adds how long it took, in whole seconds.
+     */
     private void showResults() {
         showing = Showing.RESULTS;
         bar.setTyping(false);
-        showCentre(new ResultsView(Results.of(run), choices.describe()));
+        Results results = Results.of(run);
+        String description = choices.describe();
+
+        if (choices.mode() == Mode.LENGTH) {
+            description += " · " + Math.round(results.elapsed().toMillis() / 1000.0) + " s";
+        }
+
+        showCentre(new ResultsView(results, description));
     }
 
     private void openThemes() {

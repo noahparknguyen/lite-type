@@ -99,10 +99,15 @@
 
 /* The test and the results sit in the middle of the window (Noah, 2026-10-08), while the pages
    hang from the top like menus. The space they're centred in runs from the bar to a spacer as
-   tall as the bar, so its middle is the window's middle. */
-.typing-area,
-.results {
+   tall as the bar, so its middle is the window's middle. The text keeps the column's left edge,
+   which lines are read from. The results are a short block, so they centre across the column
+   too, under the centred bar (Noah, 2026-10-08). */
+.typing-area {
     -fx-alignment: center-left;
+}
+
+.results {
+    -fx-alignment: center;
 }
 
 /* Centred within the column, above the text (Noah, 2026-10-07). */
@@ -155,7 +160,7 @@
 }
 
 .results-headline {
-    -fx-alignment: baseline-left;
+    -fx-alignment: baseline-center;
     -fx-spacing: 0.714em;
 }
 

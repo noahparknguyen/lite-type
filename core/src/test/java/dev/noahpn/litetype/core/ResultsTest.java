@@ -102,6 +102,23 @@ class ResultsTest {
     }
 
     @Test
+    void untimedRunTakesFromTheFirstKeyToTheLast() {
+        Run run = Run.untimed(text("ab cd"));
+        press(run, "ab c");
+        run.type('d', 6 * SECOND);
+        assertEquals(Duration.ofSeconds(6), Results.of(run).elapsed());
+    }
+
+    @Test
+    void timedRunTakesExactlyItsLimit() {
+        Run run = Run.timed(endless(), Duration.ofSeconds(12));
+        press(run, "go");
+        // The first tick after the deadline ends the run, but the time stops at the deadline.
+        run.tick(13 * SECOND);
+        assertEquals(Duration.ofSeconds(12), Results.of(run).elapsed());
+    }
+
+    @Test
     void runThatTookNoTimeScoresZeroWpm() {
         Run run = Run.untimed(text("a"));
         press(run, "a");
