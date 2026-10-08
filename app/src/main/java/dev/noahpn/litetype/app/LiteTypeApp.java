@@ -5,6 +5,7 @@ import dev.noahpn.litetype.core.Advance;
 import dev.noahpn.litetype.core.Results;
 import dev.noahpn.litetype.core.Run;
 import dev.noahpn.litetype.core.Separator;
+import dev.noahpn.litetype.core.Texts;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 import java.util.random.RandomGenerator;
@@ -42,6 +44,7 @@ public class LiteTypeApp extends Application {
     private final Label progress = new Label();
     private ChoicesBar bar;
     private Choices choices;
+    private List<String> words;
     private long seed;
     private Run run;
     private TypingView view;
@@ -56,6 +59,7 @@ public class LiteTypeApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         loadFont();
+        words = Content.words();
 
         choices = Choices.load(preferences);
         bar = new ChoicesBar(choices, this::choose);
@@ -212,8 +216,8 @@ public class LiteTypeApp extends Application {
 
         return switch (choices.kind()) {
             case WORDS -> timed
-                ? Run.timed(StandInText.endlessWords(seed), limit, advance)
-                : Run.untimed(StandInText.words(choices.words(), seed), advance);
+                ? Run.timed(Texts.endlessWords(words, seed), limit, advance)
+                : Run.untimed(Texts.words(words, choices.words(), seed), advance);
             case CODE -> timed
                 ? Run.timed(StandInText.endlessSnippets(seed), limit, advance)
                 : Run.untimed(StandInText.snippet(choices.size(), seed), advance);

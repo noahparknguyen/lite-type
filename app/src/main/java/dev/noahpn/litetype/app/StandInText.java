@@ -8,8 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Text to type until real content exists: common words, picked for this project, in a random
- * order, and one Java method written for it. Replaced at the content step.
+ * Code to type until the real snippets exist: one Java method written for the project. Replaced
+ * once the snippets are written.
  */
 final class StandInText {
 
@@ -32,35 +32,7 @@ final class StandInText {
         }
         """;
 
-    private static final List<String> WORDS = List.of(
-        "about", "after", "again", "around", "because", "before", "between", "bring", "change",
-        "close", "could", "early", "every", "first", "follow", "great", "group", "house", "large",
-        "learn", "light", "little", "money", "never", "night", "number", "often", "open", "other",
-        "people", "place", "point", "right", "river", "small", "sound", "still", "study", "think",
-        "through", "under", "water", "where", "while", "world", "would", "write", "young");
-
     private StandInText() {
-    }
-
-    /**
-     * Returns {@code count} random words, a space after each but the last.
-     *
-     * @param count how many words; must be positive
-     * @param seed  where the random picks start; the same seed gives the same words
-     * @return the words, in order
-     */
-    static Iterator<Word> words(int count, long seed) {
-        return Texts.words(WORDS, count, seed);
-    }
-
-    /**
-     * Returns random words that never run out, for Timed mode.
-     *
-     * @param seed where the random picks start; the same seed gives the same words
-     * @return an endless supply of words
-     */
-    static Iterator<Word> endlessWords(long seed) {
-        return Texts.endlessWords(WORDS, seed);
     }
 
     /**

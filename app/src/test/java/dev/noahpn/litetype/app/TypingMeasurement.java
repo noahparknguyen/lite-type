@@ -3,6 +3,7 @@ package dev.noahpn.litetype.app;
 import dev.noahpn.litetype.core.Run;
 import dev.noahpn.litetype.core.Separator;
 import dev.noahpn.litetype.core.SnippetParser;
+import dev.noahpn.litetype.core.Texts;
 import dev.noahpn.litetype.core.Word;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -92,7 +93,7 @@ class TypingMeasurement {
 
     @Test
     void words() throws Exception {
-        Run run = Run.untimed(StandInText.words(150, SEED), TextKind.WORDS.advance());
+        Run run = Run.untimed(Texts.words(Content.words(), 150, SEED), TextKind.WORDS.advance());
         measure(TextKind.WORDS, run);
     }
 
