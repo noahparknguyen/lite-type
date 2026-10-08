@@ -74,7 +74,7 @@
 /* The preview line, below the full lines, faded so it reads as further off. When a run's text
    runs out, the preview line empties, which tells the typist the end is near. The fade goes on
    each letter, not on the word: JavaFX draws a faded group of several nodes offscreen and then
-   blends it in, while a faded letter is just drawn lighter. Checked in the 25.0.4 bytecode. */
+   blends it in, while a faded letter is just drawn lighter. Checked in the JavaFX 27 bytecode. */
 .word:preview > .letter,
 .word:preview > .word-end {
     -fx-opacity: 0.4;

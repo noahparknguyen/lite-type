@@ -99,8 +99,8 @@ final class WordNode extends Group {
     /**
      * Marks whether the word is on the preview line, below the full lines, which the stylesheet
      * fades. Called for every word on every key, which is one set lookup when nothing changed:
-     * JavaFX restyles a node only when its pseudo-classes actually change, checked in the 25.0.4
-     * bytecode.
+     * JavaFX restyles a node only when its pseudo-classes actually change, checked in the JavaFX
+     * 27 bytecode.
      *
      * @param preview whether the word is on the preview line
      */
