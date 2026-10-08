@@ -1,1 +1,7 @@
 target/
+# IntelliJ's project files, which hold paths from the machine they were made on.
+.idea/
+*.iml
+# Java's crash logs, which record the environment variables of the process that crashed.
+hs_err_pid*
+replay_pid*
