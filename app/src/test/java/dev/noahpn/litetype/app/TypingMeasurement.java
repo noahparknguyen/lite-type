@@ -133,7 +133,7 @@ class TypingMeasurement {
             BorderPane root = new BorderPane(view);
             Scene scene = new Scene(root, 1080, 360);
             scene.getStylesheets().addAll(LiteTypeApp.stylesheet(), Themes.stylesheet(theme));
-            root.getStyleClass().add(Themes.styleClass(theme));
+            root.getStyleClass().addAll(Themes.styleClass(theme), "content");
             Stage stage = new Stage();
             stage.setScene(scene);
             stage.show();

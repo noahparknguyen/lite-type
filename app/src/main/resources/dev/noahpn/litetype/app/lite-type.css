@@ -13,12 +13,14 @@
    -lt-accent   the progress, as a number or the filled part of the line, and what's picked on
                 the theme page
    -lt-dim      quiet labels and hints
-   -lt-soft     secondary text, such as the accuracies
+   -lt-soft     secondary text, such as the accuracies */
 
-   Sizes here are still placeholders until the layout is settled. */
-
+/* The scene's root: the title bar, and the content below it. */
 .root {
     -fx-background-color: -lt-bg;
+}
+
+.content {
     -fx-padding: 40px;
 }
 
@@ -86,7 +88,7 @@
 }
 
 /* The bar, the number above the text, the results, and the pages. Every size here is in em, so
-   all of it scales from one base size the app sets on the root: 0.7 of the code font, which is
+   all of it scales from one base size the app sets on the content: 0.7 of the code font, which is
    14px at medium. A font size in em is relative to the parent's, and a padding, gap, or width in
    em to the node's own font. Each value is today's pixel size divided by 14, so medium looks as
    it always did. Only thin lines, outlines and corner radii, stay in pixels. */
@@ -274,4 +276,75 @@
 
 .theme-box:selected {
     -fx-border-color: -lt-accent;
+}
+
+/* The title bar (Noah, 2026-10-08): the app's own, so it follows the theme. Sizes here are in
+   pixels, unlike the rest around the text: it's the window's frame, sized like the system's,
+   not part of the page that grows with the text size. 32px is the height of Windows' own title
+   bar. Set here, since under WSLg the system reports no height at all. */
+.title-bar {
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
+}
+
+.title-logo {
+    -fx-padding: 0 0 0 16px;
+    -fx-spacing: 2px;
+}
+
+.title-logo-letters {
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-size: 15px;
+    -fx-fill: -lt-correct;
+}
+
+.title-logo-track {
+    -fx-background-color: -lt-mark;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+}
+
+.title-logo-fill {
+    -fx-background-color: -lt-accent;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+}
+
+/* The width of the system's own buttons on Windows. */
+.window-button {
+    -fx-pref-width: 46px;
+}
+
+.window-glyph {
+    -fx-fill: transparent;
+    -fx-stroke: -lt-dim;
+    -fx-stroke-width: 1px;
+}
+
+/* JavaFX gives the maximize button the :maximized pseudo-class while the window is maximized, so
+   the glyph switches to restore's two squares. */
+.restore-glyph,
+.window-button:maximized .maximize-glyph {
+    visibility: hidden;
+}
+
+.window-button:maximized .restore-glyph {
+    visibility: visible;
+}
+
+.window-button:hover {
+    -fx-background-color: -lt-mark;
+}
+
+.window-button:hover .window-glyph {
+    -fx-stroke: -lt-correct;
+}
+
+/* Last, so close's own colours win over the other buttons' hover. */
+.window-button.close:hover {
+    -fx-background-color: -lt-wrong;
+}
+
+.window-button.close:hover .window-glyph {
+    -fx-stroke: -lt-bg;
 }

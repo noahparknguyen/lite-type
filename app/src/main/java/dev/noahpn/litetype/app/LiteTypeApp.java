@@ -18,10 +18,12 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,10 +36,10 @@ import java.util.prefs.Preferences;
 import java.util.random.RandomGenerator;
 
 /**
- * The window: the choices bar, then one of four things: the text being typed, with a small
- * number above it, the results of the run that just ended, the theme page, or the settings page.
- * All of it sits in one column, centred in the window. Picking a choice or pressing Escape starts
- * new text; Shift+Escape starts the same text again.
+ * The window: its own title bar, the choices bar, then one of four things: the text being typed,
+ * with its progress above it, the results of the run that just ended, the theme page, or the
+ * settings page. All of it below the title bar sits in one column, centred in the window. Picking
+ * a choice or pressing Escape starts new text; Shift+Escape starts the same text again.
  */
 public class LiteTypeApp extends Application {
 
@@ -63,7 +65,12 @@ public class LiteTypeApp extends Application {
     }
 
     private final Preferences preferences = Preferences.userNodeForPackage(LiteTypeApp.class);
-    private final BorderPane root = new BorderPane();
+    // The scene's root: the title bar on top, the content below. It carries the theme's class, so
+    // both are in the theme's colours.
+    private final BorderPane window = new BorderPane();
+    // Everything below the title bar: the choices bar, the page, and the spacer, padded in from
+    // the window's edges.
+    private final BorderPane content = new BorderPane();
     private final Label progressNumber = new Label();
     private ChoicesBar bar;
     private Choices choices;
@@ -108,23 +115,29 @@ public class LiteTypeApp extends Application {
         choices = Choices.load(preferences);
         bar = new ChoicesBar(choices, this::choose, theme, this::openThemes, this::openSettings);
         BorderPane.setAlignment(bar, Pos.TOP_CENTER);
-        root.setTop(bar);
-        root.getStyleClass().add(Themes.styleClass(theme));
+        content.setTop(bar);
+        content.getStyleClass().add("content");
+        window.getStyleClass().add(Themes.styleClass(theme));
         progressNumber.getStyleClass().add("counter");
 
-        // As tall as the bar, at the bottom, so the space between them is centred on the window,
-        // and the test centred in that space sits in the window's middle.
+        // As tall as the bar, at the bottom, so the space between them is centred below the title
+        // bar, and the test centred in that space sits in the middle of the content.
         Region spacer = new Region();
         spacer.prefHeightProperty().bind(bar.heightProperty());
-        root.setBottom(spacer);
+        content.setBottom(spacer);
 
-        // The window's own size is set by WindowPlace, so the scene takes whatever it's given.
-        Scene scene = new Scene(root);
+        window.setTop(new TitleBar());
+        window.setCenter(content);
+
+        // The window's own size is set by WindowPlace, so the scene takes whatever it's given. The
+        // content's size is only known once the window lays it out below the title bar, so sizes
+        // are worked out when it changes, not when the scene does.
+        Scene scene = new Scene(window);
         scene.getStylesheets().add(stylesheet());
-        scene.widthProperty().addListener((property, oldWidth, newWidth) -> applySizes());
-        scene.heightProperty().addListener((property, oldHeight, newHeight) -> applySizes());
+        content.widthProperty().addListener((property, oldWidth, newWidth) -> applySizes());
+        content.heightProperty().addListener((property, oldHeight, newHeight) -> applySizes());
 
-        // Every theme is loaded, though only the root's class picks which one colours the window.
+        // Every theme is loaded, though only the window's class picks which one colours it.
         // The theme page needs them all, to draw each box in its own theme.
         for (String name : themes) {
             scene.getStylesheets().add(Themes.stylesheet(name));
@@ -151,6 +164,10 @@ public class LiteTypeApp extends Application {
 
         stage.setTitle("lite-type");
         addIcons(stage);
+        // The app draws its own title bar, so the system's buttons are switched off. The system
+        // keeps the frame: resizing, snapping, and the shadow.
+        stage.initStyle(StageStyle.EXTENDED);
+        HeaderBar.setSystemButtonHeight(stage, 0);
         stage.setScene(scene);
         stage.setMinWidth(MIN_WIDTH);
         stage.setMinHeight(MIN_HEIGHT);
@@ -333,7 +350,7 @@ public class LiteTypeApp extends Application {
      */
     private void showCentre(Region page) {
         BorderPane.setAlignment(page, Pos.TOP_CENTER);
-        root.setCenter(page);
+        content.setCenter(page);
         applySizes();
     }
 
@@ -344,9 +361,9 @@ public class LiteTypeApp extends Application {
      * on a key.
      */
     private void applySizes() {
-        Insets padding = root.getInsets();
-        double width = root.getWidth() - padding.getLeft() - padding.getRight();
-        double height = root.getHeight() - padding.getTop() - padding.getBottom();
+        Insets padding = content.getInsets();
+        double width = content.getWidth() - padding.getLeft() - padding.getRight();
+        double height = content.getHeight() - padding.getTop() - padding.getBottom();
 
         if (width <= 0 || height <= 0) {
             return;
@@ -377,7 +394,7 @@ public class LiteTypeApp extends Application {
         double column = Math.max(TextSize.columnWidth(code, width), barWidth);
 
         bar.setMaxWidth(column);
-        if (root.getCenter() instanceof Region page) {
+        if (content.getCenter() instanceof Region page) {
             page.setMaxWidth(column);
         }
 
@@ -399,18 +416,18 @@ public class LiteTypeApp extends Application {
         double surrounds = TextSize.surroundsSize(code);
         if (surrounds != surroundsSize) {
             surroundsSize = surrounds;
-            root.setStyle("-fx-font-size: " + surrounds + "px;");
+            content.setStyle("-fx-font-size: " + surrounds + "px;");
         }
     }
 
     /**
-     * Switches the window to another theme by swapping the root's theme class, which restyles
-     * everything once. Happens on a click, never on a key.
+     * Switches the window to another theme by swapping its theme class, which restyles
+     * everything once, the title bar included. Happens on a click, never on a key.
      */
     private void pickTheme(String name) {
-        root.getStyleClass().remove(Themes.styleClass(theme));
+        window.getStyleClass().remove(Themes.styleClass(theme));
         theme = name;
-        root.getStyleClass().add(Themes.styleClass(theme));
+        window.getStyleClass().add(Themes.styleClass(theme));
         bar.setTheme(theme);
         preferences.put(THEME_KEY, theme);
     }
