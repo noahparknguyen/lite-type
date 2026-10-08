@@ -1,0 +1,14 @@
+/* Night: cool blue-black, near-white typed text, and a cyan cursor. */
+.theme-night {
+    -lt-bg: #11141b;
+    -lt-untyped: #5f687b;
+    -lt-correct: #dfe3ea;
+    -lt-wrong: #ff6b6b;
+    -lt-extra: #b84a4a;
+    -lt-missed: #8a5864;
+    -lt-mark: #2c3240;
+    -lt-cursor: #5ccfe6;
+    -lt-accent: #5ccfe6;
+    -lt-dim: #5f687b;
+    -lt-soft: #8a93a6;
+}

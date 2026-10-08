@@ -14,7 +14,8 @@ import java.util.function.UnaryOperator;
 
 /**
  * The bar above the text: words or code, Timed or Length, and the length. Picking anything hands
- * the new choices to the app, which starts a fresh run with them.
+ * the new choices to the app, which starts a fresh run with them. At the end, apart from those,
+ * the current theme's name opens the theme page.
  *
  * <p>Its buttons never take keyboard focus. A focused button fires on Space, so after a click,
  * the typist's first Space would press it again. A button asks for focus on a mouse press only
@@ -29,6 +30,7 @@ final class ChoicesBar extends HBox {
     private final HBox kinds = group();
     private final HBox modes = group();
     private final HBox lengths = group();
+    private final Button theme = new Button();
     private Choices choices;
 
     /**
@@ -36,12 +38,40 @@ final class ChoicesBar extends HBox {
      *
      * @param choices  the choices to show as picked
      * @param onChange called with the new choices whenever the typist picks one
+     * @param theme    the theme in use, whose name opens the theme page
+     * @param onThemes called when the typist opens the theme page
      */
-    ChoicesBar(Choices choices, Consumer<Choices> onChange) {
+    ChoicesBar(Choices choices, Consumer<Choices> onChange, String theme, Runnable onThemes) {
         this.onChange = onChange;
         getStyleClass().add("choices-bar");
-        getChildren().addAll(kinds, modes, lengths);
+
+        this.theme.getStyleClass().add("choice");
+        this.theme.setFocusTraversable(false);
+        this.theme.setOnAction(event -> onThemes.run());
+        HBox themes = group();
+        themes.getChildren().add(this.theme);
+
+        getChildren().addAll(kinds, modes, lengths, themes);
         show(choices);
+        setTheme(theme);
+    }
+
+    /**
+     * Shows the name of the theme in use.
+     *
+     * @param name the theme
+     */
+    void setTheme(String name) {
+        theme.setText(name);
+    }
+
+    /**
+     * Marks the theme entry while the theme page is open.
+     *
+     * @param open whether the theme page is showing
+     */
+    void setThemesOpen(boolean open) {
+        theme.pseudoClassStateChanged(SELECTED, open);
     }
 
     /**

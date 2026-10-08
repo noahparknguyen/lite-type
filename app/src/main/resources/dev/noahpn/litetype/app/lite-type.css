@@ -1,7 +1,22 @@
-/* Every colour and size here is a placeholder until the look step. */
+/* The app's look, with no colour in it. Every colour is a name looked up from the current theme,
+   one of the files in /themes/, whose class sits on the window's root. A theme defines these 11:
+
+   -lt-bg       the background
+   -lt-untyped  text not reached yet, dim but easy to read ahead
+   -lt-correct  text typed right, and anything that should read at full strength
+   -lt-wrong    a wrong letter, and a wrong key at the end of a word
+   -lt-extra    a letter typed past the end of a word
+   -lt-missed   a letter skipped by an early Space
+   -lt-mark     the ⏎ at the end of a line of code, and quiet outlines
+   -lt-cursor   the cursor
+   -lt-accent   the counter, and what's picked on the theme page
+   -lt-dim      quiet labels and hints
+   -lt-soft     secondary text, such as the accuracies
+
+   Sizes here are still placeholders until the layout is settled. */
 
 .root {
-    -fx-background-color: #1e1f22;
+    -fx-background-color: -lt-bg;
     -fx-padding: 40px;
 }
 
@@ -21,23 +36,23 @@
 }
 
 .letter {
-    -fx-fill: #6f737a;
+    -fx-fill: -lt-untyped;
 }
 
 .letter:correct {
-    -fx-fill: #5fb865;
+    -fx-fill: -lt-correct;
 }
 
 .letter:wrong {
-    -fx-fill: #f75464;
+    -fx-fill: -lt-wrong;
 }
 
 .letter:extra {
-    -fx-fill: #a83a46;
+    -fx-fill: -lt-extra;
 }
 
 .letter:missed {
-    -fx-fill: #8a5a60;
+    -fx-fill: -lt-missed;
 }
 
 /* The mark after a word: a gap between words, ⏎ at the end of a line of code. */
@@ -49,23 +64,24 @@
    JavaFX ranks one style class above any number of pseudo-classes, so a style class here would
    win over :wrong wherever it sat. */
 .word-end:line-break {
-    -fx-fill: #4a4d52;
+    -fx-fill: -lt-mark;
 }
 
 .word-end:wrong {
-    -fx-fill: #f75464;
+    -fx-fill: -lt-wrong;
 }
 
 .cursor {
-    -fx-background-color: #e8e8e8;
+    -fx-background-color: -lt-cursor;
     -fx-pref-width: 2px;
 }
 
-/* The bar, the number above the text, and the results. */
+/* The bar, the number above the text, the results, and the theme page. */
 
 .choices-bar,
 .counter,
-.results {
+.results,
+.theme-page {
     -fx-font-family: "JetBrains Mono";
 }
 
@@ -85,7 +101,7 @@
 
 .choice {
     -fx-background-color: transparent;
-    -fx-text-fill: #6f737a;
+    -fx-text-fill: -lt-dim;
     -fx-font-size: 14px;
     -fx-padding: 2px 8px;
     -fx-cursor: hand;
@@ -93,16 +109,16 @@
 
 /* Last, so a picked choice keeps its colour under the pointer. */
 .choice:hover {
-    -fx-text-fill: #9da0a8;
+    -fx-text-fill: -lt-soft;
 }
 
 .choice:selected {
-    -fx-text-fill: #e8e8e8;
+    -fx-text-fill: -lt-correct;
 }
 
 .counter {
     -fx-font-size: 20px;
-    -fx-text-fill: #5fb865;
+    -fx-text-fill: -lt-accent;
     -fx-padding: 0 0 8px 0;
 }
 
@@ -117,26 +133,60 @@
 
 .results-wpm {
     -fx-font-size: 64px;
-    -fx-text-fill: #e8e8e8;
+    -fx-text-fill: -lt-correct;
 }
 
 .results-unit {
     -fx-font-size: 20px;
-    -fx-text-fill: #6f737a;
+    -fx-text-fill: -lt-dim;
 }
 
 .results-detail {
     -fx-font-size: 18px;
-    -fx-text-fill: #9da0a8;
+    -fx-text-fill: -lt-soft;
 }
 
 .results-context {
     -fx-font-size: 14px;
-    -fx-text-fill: #6f737a;
+    -fx-text-fill: -lt-dim;
 }
 
 .hint {
     -fx-font-size: 13px;
-    -fx-text-fill: #4a4d52;
+    -fx-text-fill: -lt-dim;
     -fx-padding: 24px 0 0 0;
+}
+
+.theme-page {
+    -fx-spacing: 8px;
+}
+
+.theme-boxes {
+    -fx-hgap: 12px;
+    -fx-vgap: 12px;
+}
+
+/* Each box carries its own theme's class as well, so these names resolve to that theme's colours
+   and every box is drawn in its own theme. The outline keeps a box visible on a page of the same
+   colour, and stays 2px in every state so picking a box never moves the others. */
+.theme-box {
+    -fx-background-color: -lt-bg;
+    -fx-background-radius: 8px;
+    -fx-border-color: -lt-mark;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -lt-correct;
+    -fx-font-size: 15px;
+    -fx-min-width: 180px;
+    -fx-padding: 14px 18px;
+    -fx-cursor: hand;
+}
+
+/* Last, so the current theme keeps its outline under the pointer. */
+.theme-box:hover {
+    -fx-border-color: -lt-dim;
+}
+
+.theme-box:selected {
+    -fx-border-color: -lt-accent;
 }

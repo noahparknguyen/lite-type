@@ -1,0 +1,7 @@
+# The themes, in the order the theme page shows them. The first is the default.
+# Each name has a file in this folder, <name>.css, that defines every colour name listed at the
+# top of lite-type.css under the class .theme-<name>. Adding a theme takes that file and one line
+# here, and no Java. A line starting with # is a note.
+ink
+night
+mono

@@ -31,22 +31,32 @@ import java.util.prefs.Preferences;
 import java.util.random.RandomGenerator;
 
 /**
- * The window: the choices bar, then either the text being typed, with a small number above it,
- * or the results of the run that just ended. Picking a choice or pressing Escape starts new text;
- * Shift+Escape starts the same text again.
+ * The window: the choices bar, then one of three things: the text being typed, with a small
+ * number above it, the results of the run that just ended, or the theme page. Picking a choice or
+ * pressing Escape starts new text; Shift+Escape starts the same text again.
  */
 public class LiteTypeApp extends Application {
 
     private static final String FONT = "/fonts/JetBrainsMono-Regular.ttf";
+    private static final String THEME_KEY = "theme";
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
     // What some systems type for Ctrl+Backspace or Delete. Neither is a letter.
     private static final char DELETE = 127;
+
+    /**
+     * What fills the window below the bar.
+     */
+    private enum Showing {
+        TEXT, RESULTS, THEMES
+    }
 
     private final Preferences preferences = Preferences.userNodeForPackage(LiteTypeApp.class);
     private final BorderPane root = new BorderPane();
     private final Label progress = new Label();
     private ChoicesBar bar;
     private Choices choices;
+    private List<String> themes;
+    private String theme;
     private List<String> words;
     private Map<SnippetSize, List<List<Word>>> snippets;
     // Every snippet, for Timed mode, which mixes all sizes.
@@ -54,7 +64,7 @@ public class LiteTypeApp extends Application {
     private long seed;
     private Run run;
     private TypingView view;
-    private boolean showingResults;
+    private Showing showing = Showing.TEXT;
 
     // In Length mode: how many words or lines the text has, and for code, the line each word is
     // on, worked out once per run so the progress number costs nothing per key.
@@ -69,14 +79,29 @@ public class LiteTypeApp extends Application {
         snippets = Content.snippets();
         allSnippets = snippets.values().stream().flatMap(List::stream).toList();
 
+        themes = Themes.names();
+        // A saved theme that's since been removed falls back to the default, the first listed.
+        theme = preferences.get(THEME_KEY, themes.getFirst());
+        if (!themes.contains(theme)) {
+            theme = themes.getFirst();
+        }
+
         choices = Choices.load(preferences);
-        bar = new ChoicesBar(choices, this::choose);
+        bar = new ChoicesBar(choices, this::choose, theme, this::openThemes);
         root.setTop(bar);
+        root.getStyleClass().add(Themes.styleClass(theme));
         progress.getStyleClass().add("counter");
 
         // Wide enough for 80 characters of code at the stylesheet's size, plus padding.
         Scene scene = new Scene(root, 1080, 420);
         scene.getStylesheets().add(stylesheet());
+
+        // Every theme is loaded, though only the root's class picks which one colours the window.
+        // The theme page needs them all, to draw each box in its own theme.
+        for (String name : themes) {
+            scene.getStylesheets().add(Themes.stylesheet(name));
+        }
+
         scene.setOnKeyTyped(this::keyTyped);
         scene.setOnKeyPressed(this::keyPressed);
 
@@ -87,7 +112,7 @@ public class LiteTypeApp extends Application {
         new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (!showingResults) {
+                if (showing == Showing.TEXT) {
                     run.tick(System.nanoTime());
                     updateStatus();
                 }
@@ -107,7 +132,7 @@ public class LiteTypeApp extends Application {
         long now = System.nanoTime();
         String typed = event.getCharacter();
 
-        if (showingResults
+        if (showing != Showing.TEXT
             || typed.length() != 1
             || typed.charAt(0) < ' '
             || typed.charAt(0) == DELETE) {
@@ -127,7 +152,7 @@ public class LiteTypeApp extends Application {
 
         if (code == KeyCode.ESCAPE) {
             newRun(event.isShiftDown() ? seed : newSeed());
-        } else if (showingResults) {
+        } else if (showing != Showing.TEXT) {
             return;
         } else if (code == KeyCode.ENTER) {
             run.type('\n', now);
@@ -184,9 +209,28 @@ public class LiteTypeApp extends Application {
     }
 
     private void showResults() {
-        showingResults = true;
+        showing = Showing.RESULTS;
         bar.setTyping(false);
         root.setCenter(new ResultsView(Results.of(run), choices.describe()));
+    }
+
+    private void openThemes() {
+        showing = Showing.THEMES;
+        bar.setTyping(false);
+        bar.setThemesOpen(true);
+        root.setCenter(new ThemePage(themes, theme, this::pickTheme));
+    }
+
+    /**
+     * Switches the window to another theme by swapping the root's theme class, which restyles
+     * everything once. Happens on a click, never on a key.
+     */
+    private void pickTheme(String name) {
+        root.getStyleClass().remove(Themes.styleClass(theme));
+        theme = name;
+        root.getStyleClass().add(Themes.styleClass(theme));
+        bar.setTheme(theme);
+        preferences.put(THEME_KEY, theme);
     }
 
     private void choose(Choices next) {
@@ -203,7 +247,8 @@ public class LiteTypeApp extends Application {
         this.seed = seed;
         run = makeRun(seed);
         view = new TypingView(run, choices.kind());
-        showingResults = false;
+        showing = Showing.TEXT;
+        bar.setThemesOpen(false);
         shownProgress = -1;
 
         if (choices.mode() == Mode.LENGTH) {

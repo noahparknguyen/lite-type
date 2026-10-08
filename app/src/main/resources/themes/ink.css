@@ -1,0 +1,14 @@
+/* Ink: warm paper, ink-dark typed text, and burnt orange for mistakes. The default. */
+.theme-ink {
+    -lt-bg: #f5f2eb;
+    -lt-untyped: #8f877a;
+    -lt-correct: #2a2723;
+    -lt-wrong: #c4501b;
+    -lt-extra: #9c3d14;
+    -lt-missed: #d4956f;
+    -lt-mark: #d8d1c4;
+    -lt-cursor: #2a2723;
+    -lt-accent: #c4501b;
+    -lt-dim: #8f877a;
+    -lt-soft: #6f685e;
+}
