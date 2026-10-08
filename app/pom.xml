@@ -9,7 +9,7 @@
   <parent>
     <groupId>dev.noahpn</groupId>
     <artifactId>lite-type</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
   </parent>
 
   <artifactId>lite-type-app</artifactId>
