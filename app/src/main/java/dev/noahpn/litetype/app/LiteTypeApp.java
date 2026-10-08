@@ -17,7 +17,6 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -109,10 +108,17 @@ public class LiteTypeApp extends Application {
         root.getStyleClass().add(Themes.styleClass(theme));
         progress.getStyleClass().add("counter");
 
+        // As tall as the bar, at the bottom, so the space between them is centred on the window,
+        // and the test centred in that space sits in the window's middle.
+        Region spacer = new Region();
+        spacer.prefHeightProperty().bind(bar.heightProperty());
+        root.setBottom(spacer);
+
         // The window's own size is set by WindowPlace, so the scene takes whatever it's given.
         Scene scene = new Scene(root);
         scene.getStylesheets().add(stylesheet());
         scene.widthProperty().addListener((property, oldWidth, newWidth) -> applySizes());
+        scene.heightProperty().addListener((property, oldHeight, newHeight) -> applySizes());
 
         // Every theme is loaded, though only the root's class picks which one colours the window.
         // The theme page needs them all, to draw each box in its own theme.
@@ -266,33 +272,41 @@ public class LiteTypeApp extends Application {
     }
 
     /**
-     * Sizes everything from the window's width and the text size setting: the typing text, the
-     * bar and everything else around it, and the column. The column holds a full line of code,
-     * but is never narrower than the bar. Runs when the window, the page, or the setting changes,
-     * never on a key.
+     * Sizes everything from the window and the text size setting: the typing text, the bar and
+     * everything else around it, and the column. The column holds a full line of code, but is
+     * never narrower than the bar. Runs when the window, the page, or the setting changes, never
+     * on a key.
      */
     private void applySizes() {
         Insets padding = root.getInsets();
-        double available = root.getWidth() - padding.getLeft() - padding.getRight();
+        double width = root.getWidth() - padding.getLeft() - padding.getRight();
+        double height = root.getHeight() - padding.getTop() - padding.getBottom();
 
-        if (available <= 0) {
+        if (width <= 0 || height <= 0) {
             return;
         }
 
-        double code = textSize.codeSize(available);
-
-        // The bar, counter, results, and pages are sized in em from the root's font, so this one
-        // size scales them all. Only set when it changes, since it restyles the whole window. The
-        // bar's styles are then applied at once, so its width below is measured at the new size.
-        double surrounds = TextSize.surroundsSize(code);
-        if (surrounds != surroundsSize) {
-            surroundsSize = surrounds;
-            root.setStyle("-fx-font-size: " + surrounds + "px;");
-            bar.applyCss();
+        // The bar, the spacer as tall as it, and the counter take height from the text. They're
+        // sized in em, so together they're a fixed number of pixels tall for each pixel of the
+        // base size, measured here at the current one. The first time, there's no base size yet,
+        // so it starts from what the text alone would allow. Off screen, the counter keeps the
+        // size it last had, which is close enough: showing the text runs this again.
+        if (surroundsSize == 0) {
+            setSurrounds(textSize.codeSize(width, height, 0));
         }
 
-        double barWidth = Math.min(bar.prefWidth(-1), available);
-        double column = Math.max(TextSize.columnWidth(code, available), barWidth);
+        // Styles normally apply just before a frame is drawn. They're applied now, so the bar and
+        // the counter are measured as they'll be drawn: at the current base size, and with any
+        // buttons a choice just rebuilt, which have no styles yet.
+        bar.applyCss();
+        progress.applyCss();
+        double surroundsShare = (2 * bar.prefHeight(-1) + progress.prefHeight(-1)) / surroundsSize;
+        double code = textSize.codeSize(width, height, surroundsShare);
+        setSurrounds(code);
+        bar.applyCss();
+
+        double barWidth = Math.min(bar.prefWidth(-1), width);
+        double column = Math.max(TextSize.columnWidth(code, width), barWidth);
 
         bar.setMaxWidth(column);
         if (root.getCenter() instanceof Region page) {
@@ -306,6 +320,18 @@ public class LiteTypeApp extends Application {
                 ? Math.round(code * TextSize.WORDS_SCALE)
                 : code;
             view.setFontSize(size);
+        }
+    }
+
+    /**
+     * Sets the size the bar, the counter, the results, and the pages are sized from in em, from
+     * the code size. Only set when it changes, since it restyles the whole window.
+     */
+    private void setSurrounds(double code) {
+        double surrounds = TextSize.surroundsSize(code);
+        if (surrounds != surroundsSize) {
+            surroundsSize = surrounds;
+            root.setStyle("-fx-font-size: " + surrounds + "px;");
         }
     }
 
@@ -346,7 +372,6 @@ public class LiteTypeApp extends Application {
 
         VBox text = new VBox(progress, view);
         text.getStyleClass().add("typing-area");
-        VBox.setVgrow(view, Priority.ALWAYS);
         showCentre(text);
         updateStatus();
     }

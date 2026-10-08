@@ -69,6 +69,15 @@
     -fx-fill: -lt-wrong;
 }
 
+/* The preview line, below the full lines, faded so it reads as further off. When a run's text
+   runs out, the preview line empties, which tells the typist the end is near. The fade goes on
+   each letter, not on the word: JavaFX draws a faded group of several nodes offscreen and then
+   blends it in, while a faded letter is just drawn lighter. Checked in the 25.0.4 bytecode. */
+.word:preview > .letter,
+.word:preview > .word-end {
+    -fx-opacity: 0.4;
+}
+
 .cursor {
     -fx-background-color: -lt-cursor;
     -fx-pref-width: 2px;
@@ -86,6 +95,14 @@
 .theme-page,
 .settings-page {
     -fx-font-family: "JetBrains Mono";
+}
+
+/* The test and the results sit in the middle of the window (Noah, 2026-10-08), while the pages
+   hang from the top like menus. The space they're centred in runs from the bar to a spacer as
+   tall as the bar, so its middle is the window's middle. */
+.typing-area,
+.results {
+    -fx-alignment: center-left;
 }
 
 /* Centred within the column, above the text (Noah, 2026-10-07). */

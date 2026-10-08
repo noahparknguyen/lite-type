@@ -90,7 +90,8 @@ final class TypingView extends Pane {
      * Sets the size of the text. Its size depends on the window, so it's set here rather than in
      * the stylesheet, which still sets the font itself. Every position is measured in cells of
      * the old size, so the cells are measured again and every word is rebuilt. That happens when
-     * the window or the setting changes, never on a key.
+     * the window or the setting changes, never on a key. Measured at once rather than on the next
+     * refresh, so the view's height is right before it's first laid out.
      *
      * @param size the font size in pixels
      */
@@ -101,7 +102,7 @@ final class TypingView extends Pane {
 
         fontSize = size;
         setStyle("-fx-font-size: " + size + "px;");
-        cellWidth = 0;
+        measure();
         shown.clear();
         words.getChildren().clear();
         linesAbove.clear();
@@ -141,9 +142,10 @@ final class TypingView extends Pane {
 
         placeWords();
 
-        // Reaching the bottom line moves everything up one, dropping the top line.
-        int bottom = kind.visibleLines() - 1;
-        while (bottom > 0 && (cursorLine < 0 || cursorLine == bottom)
+        // Reaching the bottom full line moves everything up one, dropping the top line. Past it
+        // is the preview line, where a new size or width can leave the cursor.
+        int bottom = kind.fullLines() - 1;
+        while (bottom > 0 && (cursorLine < 0 || cursorLine >= bottom)
             && secondLineStart > firstWord) {
             linesAbove.push(firstWord);
             moveWindowTo(secondLineStart);
@@ -155,7 +157,9 @@ final class TypingView extends Pane {
     }
 
     /**
-     * Reads the size of one character cell from a letter styled the way the stylesheet says.
+     * Reads the size of one character cell from a letter styled the way the stylesheet says, and
+     * sets the view's height from it. The height is every line the kind shows, filled or not, so
+     * the view stays the same height through a run, and the text centred with it never moves.
      */
     private void measure() {
         Text probe = new Text("M");
@@ -167,16 +171,17 @@ final class TypingView extends Pane {
 
         cellWidth = bounds.getWidth();
         lineHeight = bounds.getHeight();
+        setPrefHeight(kind.linesShown() * lineHeight);
         cursor.applyCss();
         cursor.resize(cursor.prefWidth(-1), lineHeight);
     }
 
     /**
-     * Places the words from firstWord on, line by line, until the window is full. A line ends
-     * where a word doesn't fit or where code has a line break, and a line of code starts at its
-     * indentation. Words that no longer fit are taken off screen, and words coming into view are
-     * made. Records the cursor's line and the column where its word starts, or line -1 if the
-     * word is out of view.
+     * Places the words from firstWord on, line by line, until the full lines and the preview line
+     * below them are filled. A line ends where a word doesn't fit or where code has a line break,
+     * and a line of code starts at its indentation. Words that no longer fit are taken off
+     * screen, and words coming into view are made. Records the cursor's line and the column where
+     * its word starts, or line -1 if the word is out of view.
      */
     private void placeWords() {
         int columns = Math.max(1, (int) (getWidth() / cellWidth));
@@ -204,7 +209,7 @@ final class TypingView extends Pane {
             }
 
             // Checked before making a node, so a word just past the window costs nothing.
-            if (line == kind.visibleLines()) {
+            if (line == kind.linesShown()) {
                 break;
             }
 
@@ -217,6 +222,7 @@ final class TypingView extends Pane {
             count++;
             node.setLayoutX(column * cellWidth);
             node.setLayoutY(line * lineHeight);
+            node.setPreview(line == kind.fullLines());
 
             if (i == current) {
                 cursorLine = line;

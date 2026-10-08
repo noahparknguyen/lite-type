@@ -9,31 +9,41 @@ import dev.noahpn.litetype.core.Advance;
 enum TextKind {
 
     /**
-     * Random words: 3 lines, moving by word, as on Monkeytype.
+     * Random words: 3 full lines, moving by word, as on Monkeytype.
      */
     WORDS(3, Advance.BY_WORD),
 
     /**
-     * Code: 7 lines, since code is read in blocks, moving by character, so every key fills one
-     * position and a line never changes shape.
+     * Code: 7 full lines, since code is read in blocks, moving by character, so every key fills
+     * one position and a line never changes shape.
      */
     CODE(7, Advance.BY_CHARACTER);
 
-    private final int visibleLines;
+    private final int fullLines;
     private final Advance advance;
 
-    TextKind(int visibleLines, Advance advance) {
-        this.visibleLines = visibleLines;
+    TextKind(int fullLines, Advance advance) {
+        this.fullLines = fullLines;
         this.advance = advance;
     }
 
     /**
-     * Returns how many lines of text show at once.
+     * Returns how many lines show in full. The cursor stays within them.
      *
-     * @return the number of lines in the window
+     * @return the number of full lines
      */
-    int visibleLines() {
-        return visibleLines;
+    int fullLines() {
+        return fullLines;
+    }
+
+    /**
+     * Returns how many lines the text takes on screen: the full lines, and the faded preview
+     * line below them.
+     *
+     * @return the number of lines on screen
+     */
+    int linesShown() {
+        return fullLines + 1;
     }
 
     /**

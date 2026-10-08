@@ -20,6 +20,7 @@ final class WordNode extends Group {
     private static final Look[] LOOKS = Look.values();
     private static final PseudoClass[] LOOK_CLASSES = new PseudoClass[LOOKS.length];
     private static final PseudoClass LINE_BREAK = PseudoClass.getPseudoClass("line-break");
+    private static final PseudoClass PREVIEW = PseudoClass.getPseudoClass("preview");
 
     static {
         for (Look look : LOOKS) {
@@ -41,6 +42,7 @@ final class WordNode extends Group {
     WordNode(TypedWord word, double cellWidth) {
         this.word = word;
         this.cellWidth = cellWidth;
+        getStyleClass().add("word");
 
         Separator kind = word.word().separator();
         String mark = switch (kind) {
@@ -92,6 +94,18 @@ final class WordNode extends Group {
 
         separator.setLayoutX(length * cellWidth);
         setLook(separator, word.separatorLook());
+    }
+
+    /**
+     * Marks whether the word is on the preview line, below the full lines, which the stylesheet
+     * fades. Called for every word on every key, which is one set lookup when nothing changed:
+     * JavaFX restyles a node only when its pseudo-classes actually change, checked in the 25.0.4
+     * bytecode.
+     *
+     * @param preview whether the word is on the preview line
+     */
+    void setPreview(boolean preview) {
+        pseudoClassStateChanged(PREVIEW, preview);
     }
 
     private Text letter(int index) {

@@ -3,11 +3,11 @@ package dev.noahpn.litetype.app;
 import dev.noahpn.litetype.core.SnippetParser;
 
 /**
- * How big the typing text is. Fit follows the window: the column takes a share of the window's
- * width, and the code font is whatever fits a full line of code across it, so a bigger window
- * gives bigger text. The others are fixed sizes that stay put when the window changes, unless it's
- * too narrow for a full line of code at that size: a line of code never wraps, so they shrink to
- * the largest size that fits. Words are always larger than code by the same ratio.
+ * How big the typing text is. Fit follows the window: a full line of code takes 80% of its width,
+ * so a bigger window gives bigger text. The others are fixed sizes that stay put when the window
+ * changes. Either way, the text never outgrows the window: a line of code never wraps and the text
+ * never runs off the bottom, so a size too big shrinks to the largest that fits. Words are always
+ * larger than code by the same ratio.
  */
 enum TextSize {
 
@@ -22,6 +22,12 @@ enum TextSize {
      * font file: every character's advance is 600 of the font's 1,000 units.
      */
     static final double CHARACTER_WIDTH = 0.6;
+
+    /**
+     * How tall one line of JetBrains Mono is, as a share of the font size. Read from the font
+     * file: it rises 1,020 of the font's 1,000 units above the baseline and drops 300 below.
+     */
+    private static final double LINE_HEIGHT = 1.32;
 
     /**
      * How much larger words are than code, since they're short and only fill 3 lines.
@@ -50,21 +56,27 @@ enum TextSize {
     }
 
     /**
-     * Returns the code font size in pixels, given how wide the window's content area is. Fit
-     * rounds to a whole pixel, for crisp text, and stays between 12 and 32. A fixed size is a
-     * ceiling: in a window too narrow for a full line at that size, it drops to the largest whole
-     * pixel that fits.
+     * Returns the code font size in pixels, given the room in the window. Fit takes 80% of the
+     * width, rounded to a whole pixel for crisp text, and stays between 12 and 32. A fixed size is
+     * a ceiling. Either way, the size drops a pixel at a time until the text fits the width, and
+     * fits the height together with everything around it, which grows with the text.
      *
-     * @param available the content area's width in pixels
+     * @param width          the content area's width in pixels
+     * @param height         the content area's height in pixels
+     * @param surroundsShare how tall everything above and below the text is, in pixels for each
+     *                       pixel of the base size from {@link #surroundsSize}
      * @return the code font size
      */
-    double codeSize(double available) {
-        if (this != FIT) {
-            return Math.min(codeSize, Math.floor(available / lineWidth(1)));
+    double codeSize(double width, double height, double surroundsShare) {
+        double size = this == FIT
+            ? Math.clamp(Math.round(width * FIT_SHARE / lineWidth(1)), SMALLEST_FIT, LARGEST_FIT)
+            : Math.min(codeSize, Math.floor(width / lineWidth(1)));
+
+        while (size > 1 && textHeight(size) + surroundsShare * surroundsSize(size) > height) {
+            size--;
         }
 
-        double fitted = available * FIT_SHARE / lineWidth(1);
-        return Math.clamp(Math.round(fitted), SMALLEST_FIT, LARGEST_FIT);
+        return size;
     }
 
     /**
@@ -96,5 +108,14 @@ enum TextSize {
      */
     private static double lineWidth(double fontSize) {
         return SnippetParser.MAX_LINE_LENGTH * CHARACTER_WIDTH * fontSize;
+    }
+
+    /**
+     * Returns how tall the text's lines are at a font size. Code's lines decide for both kinds:
+     * they take more height than words' (8 lines, against 4 at 1.4 times the size), and one size
+     * for both means changing the mode never resizes the bar.
+     */
+    private static double textHeight(double fontSize) {
+        return TextKind.CODE.linesShown() * LINE_HEIGHT * fontSize;
     }
 }
