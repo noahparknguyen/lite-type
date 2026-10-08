@@ -94,7 +94,7 @@
    it always did. Only thin lines, outlines and corner radii, stay in pixels. */
 
 .choices-bar,
-.counter,
+.progress-number,
 .results,
 .theme-page,
 .settings-page {
@@ -167,7 +167,7 @@
     -fx-text-fill: -lt-correct;
 }
 
-.counter {
+.progress-number {
     -fx-font-size: 1.429em;
     -fx-text-fill: -lt-accent;
     -fx-padding: 0 0 0.4em 0;

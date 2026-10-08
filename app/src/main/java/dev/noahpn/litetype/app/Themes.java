@@ -1,9 +1,6 @@
 package dev.noahpn.litetype.app;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -29,17 +26,11 @@ final class Themes {
      * @throws IllegalStateException if the index is missing
      */
     static List<String> names() throws IOException {
-        try (InputStream in = Themes.class.getResourceAsStream(INDEX)) {
-            if (in == null) {
-                throw new IllegalStateException("missing the theme index: " + INDEX);
-            }
-
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8)
-                .lines()
-                .map(String::strip)
-                .filter(line -> !line.isEmpty() && !line.startsWith("#"))
-                .toList();
-        }
+        return Resources.text(INDEX)
+            .lines()
+            .map(String::strip)
+            .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+            .toList();
     }
 
     /**
@@ -50,13 +41,7 @@ final class Themes {
      * @throws IllegalStateException if the theme has no stylesheet
      */
     static String stylesheet(String name) {
-        URL stylesheet = Themes.class.getResource(FOLDER + name + ".css");
-
-        if (stylesheet == null) {
-            throw new IllegalStateException("theme has no stylesheet: " + name);
-        }
-
-        return stylesheet.toExternalForm();
+        return Resources.address(FOLDER + name + ".css");
     }
 
     /**

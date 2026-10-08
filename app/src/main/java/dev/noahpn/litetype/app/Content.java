@@ -5,8 +5,6 @@ import dev.noahpn.litetype.core.SnippetParser;
 import dev.noahpn.litetype.core.Word;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -37,7 +35,7 @@ final class Content {
      * @throws IllegalStateException if the file is missing
      */
     static List<String> words() throws IOException {
-        return read(WORDS)
+        return Resources.text(WORDS)
             .lines()
             .map(String::strip)
             .filter(line -> !line.isEmpty() && !line.startsWith("#"))
@@ -90,7 +88,7 @@ final class Content {
         List<String> sources = new ArrayList<>();
         StringBuilder snippet = new StringBuilder();
 
-        for (String line : read(file).lines().toList()) {
+        for (String line : Resources.text(file).lines().toList()) {
             if (line.equals(NEXT_SNIPPET)) {
                 sources.add(snippet.toString());
                 snippet.setLength(0);
@@ -101,15 +99,5 @@ final class Content {
 
         sources.add(snippet.toString());
         return sources;
-    }
-
-    private static String read(String resource) throws IOException {
-        try (InputStream in = Content.class.getResourceAsStream(resource)) {
-            if (in == null) {
-                throw new IllegalStateException("missing content: " + resource);
-            }
-
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
     }
 }

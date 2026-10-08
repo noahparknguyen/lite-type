@@ -11,10 +11,29 @@ import dev.noahpn.litetype.core.SnippetParser;
  */
 enum TextSize {
 
+    /**
+     * Follows the window: a full line of code across 80% of its width.
+     */
     FIT(0),
+
+    /**
+     * Code at 16px.
+     */
     SMALL(16),
+
+    /**
+     * Code at 20px.
+     */
     MEDIUM(20),
+
+    /**
+     * Code at 24px.
+     */
     LARGE(24),
+
+    /**
+     * Code at 30px.
+     */
     HUGE(30);
 
     /**
@@ -35,7 +54,7 @@ enum TextSize {
     static final double WORDS_SCALE = 1.4;
 
     /**
-     * The base size of the bar, the counter, the results, and the pages, as a share of the code
+     * The base size of the bar, the progress, the results, and the pages, as a share of the code
      * font, so they grow with the text: 14px when code is 20px.
      */
     private static final double SURROUNDS_SCALE = 0.7;
@@ -92,7 +111,7 @@ enum TextSize {
     }
 
     /**
-     * Returns the base font size for the bar, the counter, the results, and the pages: 0.7 of the
+     * Returns the base font size for the bar, the progress, the results, and the pages: 0.7 of the
      * code font, rounded to a whole pixel, and never below 12. The bar is about three quarters as
      * wide as a line of code, and a line of code always fits the window, so the bar does too.
      *

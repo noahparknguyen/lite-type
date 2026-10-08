@@ -20,7 +20,7 @@ public final class WpmCalculator {
      *
      * @param characterCount the characters that count toward WPM: those in fully correct words,
      *                       plus the space after each; must not be negative
-     * @param elapsed        how long the test took; must be positive
+     * @param elapsed        how long the run took; must be positive
      * @return the words per minute
      * @throws NullPointerException     if {@code elapsed} is null
      * @throws IllegalArgumentException if {@code characterCount} is negative or {@code elapsed} is

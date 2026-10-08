@@ -21,39 +21,102 @@ record Choices(TextKind kind, Mode mode, int seconds, int words, SnippetSize siz
      * Whether the run ends on a deadline or at the end of its text.
      */
     enum Mode {
-        TIME, LENGTH
+
+        /**
+         * Timed: the run ends on its deadline, and the text never runs out.
+         */
+        TIME,
+
+        /**
+         * Length: the run ends at the end of its text.
+         */
+        LENGTH
     }
 
     /**
      * How long a code snippet is, in Length mode.
      */
     enum SnippetSize {
-        SHORT, MEDIUM, LONG
+
+        /**
+         * 4 to 8 lines.
+         */
+        SHORT,
+
+        /**
+         * 10 to 18 lines.
+         */
+        MEDIUM,
+
+        /**
+         * 20 to 35 lines.
+         */
+        LONG
     }
 
+    /**
+     * The time limits offered in Timed mode, in seconds.
+     */
     static final List<Integer> SECONDS = List.of(15, 30, 60, 120);
+
+    /**
+     * The word counts offered for words in Length mode.
+     */
     static final List<Integer> WORD_COUNTS = List.of(10, 25, 50, 100);
+
+    /**
+     * The choices on first launch: words, for 30 seconds.
+     */
     static final Choices DEFAULT =
         new Choices(TextKind.WORDS, Mode.TIME, 30, 25, SnippetSize.MEDIUM);
 
-    // A record's fields can't change, so each of these returns a copy with one choice changed.
-
+    /**
+     * Returns these choices with words or code changed. A record's fields can't change, so each
+     * {@code with} method returns a copy with one choice changed.
+     *
+     * @param kind words or code
+     * @return the new choices
+     */
     Choices withKind(TextKind kind) {
         return new Choices(kind, mode, seconds, words, size);
     }
 
+    /**
+     * Returns these choices with the mode changed.
+     *
+     * @param mode Timed or Length
+     * @return the new choices
+     */
     Choices withMode(Mode mode) {
         return new Choices(kind, mode, seconds, words, size);
     }
 
+    /**
+     * Returns these choices with the time limit changed.
+     *
+     * @param seconds the time limit, one of {@link #SECONDS}
+     * @return the new choices
+     */
     Choices withSeconds(int seconds) {
         return new Choices(kind, mode, seconds, words, size);
     }
 
+    /**
+     * Returns these choices with the word count changed.
+     *
+     * @param words the word count, one of {@link #WORD_COUNTS}
+     * @return the new choices
+     */
     Choices withWords(int words) {
         return new Choices(kind, mode, seconds, words, size);
     }
 
+    /**
+     * Returns these choices with the snippet size changed.
+     *
+     * @param size the snippet size
+     * @return the new choices
+     */
     Choices withSize(SnippetSize size) {
         return new Choices(kind, mode, seconds, words, size);
     }
@@ -83,11 +146,11 @@ record Choices(TextKind kind, Mode mode, int seconds, int words, SnippetSize siz
      * @return the saved choices
      */
     static Choices load(Preferences preferences) {
-        TextKind kind = parse(TextKind.class, preferences.get("kind", null), DEFAULT.kind);
-        Mode mode = parse(Mode.class, preferences.get("mode", null), DEFAULT.mode);
+        TextKind kind = Saved.read(preferences, "kind", DEFAULT.kind);
+        Mode mode = Saved.read(preferences, "mode", DEFAULT.mode);
         int seconds = preferences.getInt("seconds", DEFAULT.seconds);
         int words = preferences.getInt("words", DEFAULT.words);
-        SnippetSize size = parse(SnippetSize.class, preferences.get("size", null), DEFAULT.size);
+        SnippetSize size = Saved.read(preferences, "size", DEFAULT.size);
 
         return new Choices(
             kind,
@@ -108,17 +171,5 @@ record Choices(TextKind kind, Mode mode, int seconds, int words, SnippetSize siz
         preferences.putInt("seconds", seconds);
         preferences.putInt("words", words);
         preferences.put("size", size.name());
-    }
-
-    private static <E extends Enum<E>> E parse(Class<E> type, String name, E fallback) {
-        if (name == null) {
-            return fallback;
-        }
-
-        try {
-            return Enum.valueOf(type, name);
-        } catch (IllegalArgumentException e) {
-            return fallback;
-        }
     }
 }
