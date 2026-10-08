@@ -66,6 +66,7 @@ public class LiteTypeApp extends Application {
     private List<String> themes;
     private String theme;
     private TextSize textSize;
+    private double surroundsSize;
     private List<String> words;
     private Map<SnippetSize, List<List<Word>>> snippets;
     // Every snippet, for Timed mode, which mixes all sizes.
@@ -265,9 +266,9 @@ public class LiteTypeApp extends Application {
     }
 
     /**
-     * Sizes the column and the typing text from the window's width and the text size setting.
-     * The column holds a full line of code, but is never narrower than the bar, so the bar and
-     * the text always share a left edge. Runs when the window, the page, or the setting changes,
+     * Sizes everything from the window's width and the text size setting: the typing text, the
+     * bar and everything else around it, and the column. The column holds a full line of code,
+     * but is never narrower than the bar. Runs when the window, the page, or the setting changes,
      * never on a key.
      */
     private void applySizes() {
@@ -279,6 +280,17 @@ public class LiteTypeApp extends Application {
         }
 
         double code = textSize.codeSize(available);
+
+        // The bar, counter, results, and pages are sized in em from the root's font, so this one
+        // size scales them all. Only set when it changes, since it restyles the whole window. The
+        // bar's styles are then applied at once, so its width below is measured at the new size.
+        double surrounds = TextSize.surroundsSize(code);
+        if (surrounds != surroundsSize) {
+            surroundsSize = surrounds;
+            root.setStyle("-fx-font-size: " + surrounds + "px;");
+            bar.applyCss();
+        }
+
         double barWidth = Math.min(bar.prefWidth(-1), available);
         double column = Math.max(TextSize.columnWidth(code, available), barWidth);
 

@@ -48,7 +48,7 @@ final class SettingsPage extends VBox {
         getChildren().addAll(
             label("text size", "setting-name"),
             sizes,
-            label("fit grows with the window; the others stay the same size", "setting-note"),
+            label("fit grows with the window; the others stay put while they fit", "setting-note"),
             label("esc back to typing", "hint"));
     }
 
