@@ -2,7 +2,7 @@
    only colour, for mistakes. */
 .theme-mono {
     -lt-bg: #0e0e0e;
-    -lt-untyped: #5e5e5e;
+    -lt-untyped: #606060;
     -lt-correct: #ededed;
     -lt-wrong: #ff4545;
     -lt-extra: #b33a3a;
@@ -10,6 +10,6 @@
     -lt-mark: #2a2a2a;
     -lt-cursor: #ededed;
     -lt-accent: #ededed;
-    -lt-dim: #5e5e5e;
+    -lt-dim: #606060;
     -lt-soft: #8c8c8c;
 }
