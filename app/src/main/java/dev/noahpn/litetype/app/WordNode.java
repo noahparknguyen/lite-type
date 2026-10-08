@@ -50,7 +50,7 @@ final class WordNode extends Group {
             case NONE -> "";
         };
         separator = new Text(mark);
-        separator.getStyleClass().add("separator");
+        separator.getStyleClass().add("word-end");
         // A pseudo-class, not a style class: JavaFX ranks one style class above any number of
         // pseudo-classes, so a style class here would outrank :wrong.
         separator.pseudoClassStateChanged(LINE_BREAK, kind == Separator.LINE_BREAK);

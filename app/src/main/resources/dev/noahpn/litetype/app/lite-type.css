@@ -40,29 +40,103 @@
     -fx-fill: #8a5a60;
 }
 
-.separator {
+/* The mark after a word: a gap between words, ⏎ at the end of a line of code. */
+.word-end {
     -fx-fill: transparent;
 }
 
 /* Every state below is a pseudo-class, so these rules rank equally and the last match wins.
    JavaFX ranks one style class above any number of pseudo-classes, so a style class here would
    win over :wrong wherever it sat. */
-.separator:line-break {
+.word-end:line-break {
     -fx-fill: #4a4d52;
 }
 
-.separator:wrong {
+.word-end:wrong {
     -fx-fill: #f75464;
 }
-
 
 .cursor {
     -fx-background-color: #e8e8e8;
     -fx-pref-width: 2px;
 }
 
-.status {
+/* The bar, the number above the text, and the results. */
+
+.choices-bar,
+.counter,
+.results {
     -fx-font-family: "JetBrains Mono";
-    -fx-font-size: 16px;
+}
+
+.choices-bar {
+    -fx-alignment: center;
+    -fx-spacing: 32px;
+    -fx-padding: 0 0 24px 0;
+}
+
+.choices-bar:typing {
+    -fx-opacity: 0;
+}
+
+.choice-group {
+    -fx-spacing: 4px;
+}
+
+.choice {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6f737a;
+    -fx-font-size: 14px;
+    -fx-padding: 2px 8px;
+    -fx-cursor: hand;
+}
+
+/* Last, so a picked choice keeps its colour under the pointer. */
+.choice:hover {
     -fx-text-fill: #9da0a8;
+}
+
+.choice:selected {
+    -fx-text-fill: #e8e8e8;
+}
+
+.counter {
+    -fx-font-size: 20px;
+    -fx-text-fill: #5fb865;
+    -fx-padding: 0 0 8px 0;
+}
+
+.results {
+    -fx-spacing: 6px;
+}
+
+.results-headline {
+    -fx-alignment: baseline-left;
+    -fx-spacing: 10px;
+}
+
+.results-wpm {
+    -fx-font-size: 64px;
+    -fx-text-fill: #e8e8e8;
+}
+
+.results-unit {
+    -fx-font-size: 20px;
+    -fx-text-fill: #6f737a;
+}
+
+.results-detail {
+    -fx-font-size: 18px;
+    -fx-text-fill: #9da0a8;
+}
+
+.results-context {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6f737a;
+}
+
+.hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: #4a4d52;
+    -fx-padding: 24px 0 0 0;
 }

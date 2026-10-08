@@ -49,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TypingMeasurement {
 
     private static final Path OUT = Path.of("target", "measure");
+    // A fixed seed types the same words every time, so one measurement compares with the next.
+    private static final long SEED = 1;
     private static final int SETTLE_FRAMES = 30;
     private static final int WARM_UP_KEYS = 100;
     private static final long LATE_FRAME_NANOS = 20_000_000;
@@ -90,7 +92,7 @@ class TypingMeasurement {
 
     @Test
     void words() throws Exception {
-        Run run = Run.untimed(StandInText.words(150), TextKind.WORDS.advance());
+        Run run = Run.untimed(StandInText.words(150, SEED), TextKind.WORDS.advance());
         measure(TextKind.WORDS, run);
     }
 

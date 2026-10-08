@@ -1,13 +1,11 @@
 package dev.noahpn.litetype.app;
 
-import dev.noahpn.litetype.core.Separator;
 import dev.noahpn.litetype.core.SnippetParser;
+import dev.noahpn.litetype.core.Texts;
 import dev.noahpn.litetype.core.Word;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.random.RandomGenerator;
 
 /**
  * Text to type until real content exists: common words, picked for this project, in a random
@@ -48,27 +46,42 @@ final class StandInText {
      * Returns {@code count} random words, a space after each but the last.
      *
      * @param count how many words; must be positive
+     * @param seed  where the random picks start; the same seed gives the same words
      * @return the words, in order
      */
-    static Iterator<Word> words(int count) {
-        RandomGenerator random = RandomGenerator.getDefault();
-        List<Word> words = new ArrayList<>(count);
-
-        for (int i = 0; i < count; i++) {
-            String text = WORDS.get(random.nextInt(WORDS.size()));
-            Separator separator = i == count - 1 ? Separator.NONE : Separator.SPACE;
-            words.add(new Word(text, separator, 0));
-        }
-
-        return words.iterator();
+    static Iterator<Word> words(int count, long seed) {
+        return Texts.words(WORDS, count, seed);
     }
 
     /**
-     * Returns the words of the stand-in snippet.
+     * Returns random words that never run out, for Timed mode.
      *
+     * @param seed where the random picks start; the same seed gives the same words
+     * @return an endless supply of words
+     */
+    static Iterator<Word> endlessWords(long seed) {
+        return Texts.endlessWords(WORDS, seed);
+    }
+
+    /**
+     * Returns one snippet's words. The stand-in has a single snippet, so every size and seed
+     * gives it.
+     *
+     * @param size the snippet size picked
+     * @param seed where the choice of snippet starts
      * @return the snippet's words, in order
      */
-    static Iterator<Word> snippet() {
+    static Iterator<Word> snippet(Choices.SnippetSize size, long seed) {
         return SnippetParser.parse(SNIPPET).iterator();
+    }
+
+    /**
+     * Returns snippets back to back, never running out, for Timed mode.
+     *
+     * @param seed where the shuffling starts; the same seed gives the same order
+     * @return an endless supply of words
+     */
+    static Iterator<Word> endlessSnippets(long seed) {
+        return Texts.endlessSnippets(List.of(SnippetParser.parse(SNIPPET)), seed);
     }
 }
