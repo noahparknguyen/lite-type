@@ -11,22 +11,20 @@ enum TextKind {
     /**
      * Random words: 3 lines, moving by word, as on Monkeytype.
      */
-    WORDS(3, Advance.BY_WORD, "words"),
+    WORDS(3, Advance.BY_WORD),
 
     /**
      * Code: 7 lines, since code is read in blocks, moving by character, so every key fills one
      * position and a line never changes shape.
      */
-    CODE(7, Advance.BY_CHARACTER, "code");
+    CODE(7, Advance.BY_CHARACTER);
 
     private final int visibleLines;
     private final Advance advance;
-    private final String styleClass;
 
-    TextKind(int visibleLines, Advance advance, String styleClass) {
+    TextKind(int visibleLines, Advance advance) {
         this.visibleLines = visibleLines;
         this.advance = advance;
-        this.styleClass = styleClass;
     }
 
     /**
@@ -45,14 +43,5 @@ enum TextKind {
      */
     Advance advance() {
         return advance;
-    }
-
-    /**
-     * Returns the style class the stylesheet sizes this kind of text by.
-     *
-     * @return the style class
-     */
-    String styleClass() {
-        return styleClass;
     }
 }

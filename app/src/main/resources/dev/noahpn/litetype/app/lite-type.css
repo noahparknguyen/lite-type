@@ -21,18 +21,10 @@
 }
 
 /* Set once for the whole display. A letter's look never changes its font, so restyling a letter
-   never measures text again. */
+   never measures text again. The size comes from TextSize, set by the app, since it depends on
+   the window. */
 .typing-view {
     -fx-font-family: "JetBrains Mono";
-}
-
-.typing-view.words {
-    -fx-font-size: 28px;
-}
-
-/* At 0.6 of the size per character, 80 characters of code are 960px wide. */
-.typing-view.code {
-    -fx-font-size: 20px;
 }
 
 .letter {
@@ -81,12 +73,14 @@
 .choices-bar,
 .counter,
 .results,
-.theme-page {
+.theme-page,
+.settings-page {
     -fx-font-family: "JetBrains Mono";
 }
 
+/* Left-aligned, so the bar starts where the text does. */
 .choices-bar {
-    -fx-alignment: center;
+    -fx-alignment: center-left;
     -fx-spacing: 32px;
     -fx-padding: 0 0 24px 0;
 }
@@ -105,6 +99,14 @@
     -fx-font-size: 14px;
     -fx-padding: 2px 8px;
     -fx-cursor: hand;
+}
+
+/* Every length takes a slot as wide as the widest label, "medium": 6 characters at 0.6em, plus
+   the padding. In em, so the slots scale with the bar's font. Fixed slots mean switching modes
+   never moves anything in the bar. */
+.length-choice {
+    -fx-min-width: 4.8em;
+    -fx-pref-width: 4.8em;
 }
 
 /* Last, so a picked choice keeps its colour under the pointer. */
@@ -159,6 +161,20 @@
 
 .theme-page {
     -fx-spacing: 8px;
+}
+
+.settings-page {
+    -fx-spacing: 10px;
+}
+
+.setting-name {
+    -fx-font-size: 15px;
+    -fx-text-fill: -lt-correct;
+}
+
+.setting-note {
+    -fx-font-size: 13px;
+    -fx-text-fill: -lt-dim;
 }
 
 .theme-boxes {

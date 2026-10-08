@@ -10,12 +10,15 @@ import dev.noahpn.litetype.core.Texts;
 import dev.noahpn.litetype.core.Word;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -31,23 +34,28 @@ import java.util.prefs.Preferences;
 import java.util.random.RandomGenerator;
 
 /**
- * The window: the choices bar, then one of three things: the text being typed, with a small
- * number above it, the results of the run that just ended, or the theme page. Picking a choice or
- * pressing Escape starts new text; Shift+Escape starts the same text again.
+ * The window: the choices bar, then one of four things: the text being typed, with a small
+ * number above it, the results of the run that just ended, the theme page, or the settings page.
+ * All of it sits in one column, centred in the window. Picking a choice or pressing Escape starts
+ * new text; Shift+Escape starts the same text again.
  */
 public class LiteTypeApp extends Application {
 
     private static final String FONT = "/fonts/JetBrainsMono-Regular.ttf";
     private static final String THEME_KEY = "theme";
+    private static final String TEXT_SIZE_KEY = "textSize";
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
     // What some systems type for Ctrl+Backspace or Delete. Neither is a letter.
     private static final char DELETE = 127;
+    // Small enough for half a laptop screen, big enough that the bar always fits in one row.
+    private static final double MIN_WIDTH = 900;
+    private static final double MIN_HEIGHT = 480;
 
     /**
      * What fills the window below the bar.
      */
     private enum Showing {
-        TEXT, RESULTS, THEMES
+        TEXT, RESULTS, THEMES, SETTINGS
     }
 
     private final Preferences preferences = Preferences.userNodeForPackage(LiteTypeApp.class);
@@ -57,6 +65,7 @@ public class LiteTypeApp extends Application {
     private Choices choices;
     private List<String> themes;
     private String theme;
+    private TextSize textSize;
     private List<String> words;
     private Map<SnippetSize, List<List<Word>>> snippets;
     // Every snippet, for Timed mode, which mixes all sizes.
@@ -86,15 +95,23 @@ public class LiteTypeApp extends Application {
             theme = themes.getFirst();
         }
 
+        try {
+            textSize = TextSize.valueOf(preferences.get(TEXT_SIZE_KEY, TextSize.FIT.name()));
+        } catch (IllegalArgumentException e) {
+            textSize = TextSize.FIT;
+        }
+
         choices = Choices.load(preferences);
-        bar = new ChoicesBar(choices, this::choose, theme, this::openThemes);
+        bar = new ChoicesBar(choices, this::choose, theme, this::openThemes, this::openSettings);
+        BorderPane.setAlignment(bar, Pos.TOP_CENTER);
         root.setTop(bar);
         root.getStyleClass().add(Themes.styleClass(theme));
         progress.getStyleClass().add("counter");
 
-        // Wide enough for 80 characters of code at the stylesheet's size, plus padding.
-        Scene scene = new Scene(root, 1080, 420);
+        // The window's own size is set by WindowPlace, so the scene takes whatever it's given.
+        Scene scene = new Scene(root);
         scene.getStylesheets().add(stylesheet());
+        scene.widthProperty().addListener((property, oldWidth, newWidth) -> applySizes());
 
         // Every theme is loaded, though only the root's class picks which one colours the window.
         // The theme page needs them all, to draw each box in its own theme.
@@ -121,6 +138,10 @@ public class LiteTypeApp extends Application {
 
         stage.setTitle("lite-type");
         stage.setScene(scene);
+        stage.setMinWidth(MIN_WIDTH);
+        stage.setMinHeight(MIN_HEIGHT);
+        WindowPlace.restore(stage, preferences);
+        stage.setOnHiding(event -> WindowPlace.save(stage, preferences));
         stage.show();
     }
 
@@ -211,14 +232,69 @@ public class LiteTypeApp extends Application {
     private void showResults() {
         showing = Showing.RESULTS;
         bar.setTyping(false);
-        root.setCenter(new ResultsView(Results.of(run), choices.describe()));
+        showCentre(new ResultsView(Results.of(run), choices.describe()));
     }
 
     private void openThemes() {
         showing = Showing.THEMES;
         bar.setTyping(false);
         bar.setThemesOpen(true);
-        root.setCenter(new ThemePage(themes, theme, this::pickTheme));
+        showCentre(new ThemePage(themes, theme, this::pickTheme));
+    }
+
+    private void openSettings() {
+        showing = Showing.SETTINGS;
+        bar.setTyping(false);
+        bar.setSettingsOpen(true);
+        showCentre(new SettingsPage(textSize, this::pickTextSize));
+    }
+
+    private void pickTextSize(TextSize size) {
+        textSize = size;
+        preferences.put(TEXT_SIZE_KEY, size.name());
+        applySizes();
+    }
+
+    /**
+     * Puts a page in the column, below the bar.
+     */
+    private void showCentre(Region page) {
+        BorderPane.setAlignment(page, Pos.TOP_CENTER);
+        root.setCenter(page);
+        applySizes();
+    }
+
+    /**
+     * Sizes the column and the typing text from the window's width and the text size setting.
+     * The column holds a full line of code, but is never narrower than the bar, so the bar and
+     * the text always share a left edge. Runs when the window, the page, or the setting changes,
+     * never on a key.
+     */
+    private void applySizes() {
+        Insets padding = root.getInsets();
+        double available = root.getWidth() - padding.getLeft() - padding.getRight();
+
+        if (available <= 0) {
+            return;
+        }
+
+        double code = textSize.codeSize(available);
+        double barWidth = Math.min(bar.prefWidth(-1), available);
+        double column = Math.max(TextSize.columnWidth(code, available), barWidth);
+
+        bar.setMaxWidth(column);
+        if (root.getCenter() instanceof Region page) {
+            page.setMaxWidth(column);
+        }
+
+        // Only the text on screen is resized. A page replaces it, and the next run makes a new
+        // view, which gets the current size when it's shown.
+        if (showing == Showing.TEXT) {
+            double size = choices.kind() == TextKind.WORDS
+                ? Math.round(code * TextSize.WORDS_SCALE)
+                : code;
+            view.setFontSize(size);
+        }
     }
 
     /**
@@ -249,6 +325,7 @@ public class LiteTypeApp extends Application {
         view = new TypingView(run, choices.kind());
         showing = Showing.TEXT;
         bar.setThemesOpen(false);
+        bar.setSettingsOpen(false);
         shownProgress = -1;
 
         if (choices.mode() == Mode.LENGTH) {
@@ -258,7 +335,7 @@ public class LiteTypeApp extends Application {
         VBox text = new VBox(progress, view);
         text.getStyleClass().add("typing-area");
         VBox.setVgrow(view, Priority.ALWAYS);
-        root.setCenter(text);
+        showCentre(text);
         updateStatus();
     }
 

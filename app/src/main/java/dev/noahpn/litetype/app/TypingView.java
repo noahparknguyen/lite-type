@@ -41,6 +41,7 @@ final class TypingView extends Pane {
     private final Region cursor = new Region();
     private final Timeline blink;
 
+    private double fontSize;
     private double cellWidth;
     private double lineHeight;
     private int firstWord;
@@ -57,7 +58,7 @@ final class TypingView extends Pane {
     TypingView(Run run, TextKind kind) {
         this.run = run;
         this.kind = kind;
-        getStyleClass().addAll("typing-view", kind.styleClass());
+        getStyleClass().add("typing-view");
 
         // Positions are set by hand, so the pane never needs to lay these out. The cursor is
         // added last to draw on top.
@@ -83,6 +84,28 @@ final class TypingView extends Pane {
             linesAbove.clear();
             refresh();
         });
+    }
+
+    /**
+     * Sets the size of the text. Its size depends on the window, so it's set here rather than in
+     * the stylesheet, which still sets the font itself. Every position is measured in cells of
+     * the old size, so the cells are measured again and every word is rebuilt. That happens when
+     * the window or the setting changes, never on a key.
+     *
+     * @param size the font size in pixels
+     */
+    void setFontSize(double size) {
+        if (size == fontSize) {
+            return;
+        }
+
+        fontSize = size;
+        setStyle("-fx-font-size: " + size + "px;");
+        cellWidth = 0;
+        shown.clear();
+        words.getChildren().clear();
+        linesAbove.clear();
+        refresh();
     }
 
     /**

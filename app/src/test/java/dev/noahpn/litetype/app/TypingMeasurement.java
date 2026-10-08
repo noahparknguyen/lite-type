@@ -53,6 +53,8 @@ class TypingMeasurement {
     // A fixed seed types the same words every time, so one measurement compares with the next.
     private static final long SEED = 1;
     private static final int CODE_WORDS = 400;
+    private static final double WORDS_SIZE = 28;
+    private static final double CODE_SIZE = 20;
     private static final int SETTLE_FRAMES = 30;
     private static final int WARM_UP_KEYS = 100;
     private static final long LATE_FRAME_NANOS = 20_000_000;
@@ -122,11 +124,16 @@ class TypingMeasurement {
         long[] keyNanos = new long[keys.size()];
         List<Long> frameGaps = new ArrayList<>();
         CompletableFuture<Void> done = new CompletableFuture<>();
+        String theme = Themes.names().getFirst();
 
         Platform.runLater(() -> {
+            // Fixed sizes and the default theme, so every measurement compares with the last.
             TypingView view = new TypingView(run, kind);
-            Scene scene = new Scene(new BorderPane(view), 1080, 360);
-            scene.getStylesheets().add(LiteTypeApp.stylesheet());
+            view.setFontSize(kind == TextKind.WORDS ? WORDS_SIZE : CODE_SIZE);
+            BorderPane root = new BorderPane(view);
+            Scene scene = new Scene(root, 1080, 360);
+            scene.getStylesheets().addAll(LiteTypeApp.stylesheet(), Themes.stylesheet(theme));
+            root.getStyleClass().add(Themes.styleClass(theme));
             Stage stage = new Stage();
             stage.setScene(scene);
             stage.show();

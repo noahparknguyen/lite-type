@@ -15,7 +15,7 @@ import java.util.function.UnaryOperator;
 /**
  * The bar above the text: words or code, Timed or Length, and the length. Picking anything hands
  * the new choices to the app, which starts a fresh run with them. At the end, apart from those,
- * the current theme's name opens the theme page.
+ * the current theme's name opens the theme page, and "settings" opens the settings page.
  *
  * <p>Its buttons never take keyboard focus. A focused button fires on Space, so after a click,
  * the typist's first Space would press it again. A button asks for focus on a mouse press only
@@ -26,32 +26,44 @@ final class ChoicesBar extends HBox {
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
     private static final PseudoClass TYPING = PseudoClass.getPseudoClass("typing");
 
+    // The most choices any mode offers for its length. The lengths group always fills this many
+    // slots of the same width, so switching modes never moves anything in the bar.
+    private static final int LENGTH_SLOTS = Math.max(
+        Math.max(Choices.SECONDS.size(), Choices.WORD_COUNTS.size()),
+        SnippetSize.values().length);
+
     private final Consumer<Choices> onChange;
     private final HBox kinds = group();
     private final HBox modes = group();
     private final HBox lengths = group();
-    private final Button theme = new Button();
+    private final Button theme = entry("");
+    private final Button settings = entry("settings");
     private Choices choices;
 
     /**
      * Creates the bar.
      *
-     * @param choices  the choices to show as picked
-     * @param onChange called with the new choices whenever the typist picks one
-     * @param theme    the theme in use, whose name opens the theme page
-     * @param onThemes called when the typist opens the theme page
+     * @param choices    the choices to show as picked
+     * @param onChange   called with the new choices whenever the typist picks one
+     * @param theme      the theme in use, whose name opens the theme page
+     * @param onThemes   called when the typist opens the theme page
+     * @param onSettings called when the typist opens the settings page
      */
-    ChoicesBar(Choices choices, Consumer<Choices> onChange, String theme, Runnable onThemes) {
+    ChoicesBar(
+        Choices choices,
+        Consumer<Choices> onChange,
+        String theme,
+        Runnable onThemes,
+        Runnable onSettings) {
         this.onChange = onChange;
         getStyleClass().add("choices-bar");
 
-        this.theme.getStyleClass().add("choice");
-        this.theme.setFocusTraversable(false);
         this.theme.setOnAction(event -> onThemes.run());
-        HBox themes = group();
-        themes.getChildren().add(this.theme);
+        settings.setOnAction(event -> onSettings.run());
+        HBox pages = group();
+        pages.getChildren().addAll(this.theme, settings);
 
-        getChildren().addAll(kinds, modes, lengths, themes);
+        getChildren().addAll(kinds, modes, lengths, pages);
         show(choices);
         setTheme(theme);
     }
@@ -72,6 +84,15 @@ final class ChoicesBar extends HBox {
      */
     void setThemesOpen(boolean open) {
         theme.pseudoClassStateChanged(SELECTED, open);
+    }
+
+    /**
+     * Marks the settings entry while the settings page is open.
+     *
+     * @param open whether the settings page is showing
+     */
+    void setSettingsOpen(boolean open) {
+        settings.pseudoClassStateChanged(SELECTED, open);
     }
 
     /**
@@ -119,13 +140,34 @@ final class ChoicesBar extends HBox {
             }
         }
 
+        // Every length takes a slot of the same width, and unused slots keep their space: an
+        // invisible node is still laid out.
+        for (Button option : options) {
+            option.getStyleClass().add("length-choice");
+        }
+
+        while (options.size() < LENGTH_SLOTS) {
+            Button empty = entry("");
+            empty.getStyleClass().add("length-choice");
+            empty.setVisible(false);
+            options.add(empty);
+        }
+
         lengths.getChildren().setAll(options);
     }
 
-    private Button choice(String label, boolean selected, UnaryOperator<Choices> change) {
+    /**
+     * Returns a button that never takes keyboard focus, styled like the other choices.
+     */
+    private static Button entry(String label) {
         Button button = new Button(label);
         button.getStyleClass().add("choice");
         button.setFocusTraversable(false);
+        return button;
+    }
+
+    private Button choice(String label, boolean selected, UnaryOperator<Choices> change) {
+        Button button = entry(label);
         button.pseudoClassStateChanged(SELECTED, selected);
         button.setOnAction(event -> {
             Choices next = change.apply(choices);
