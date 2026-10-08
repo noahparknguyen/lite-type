@@ -19,7 +19,6 @@ final class WordNode extends Group {
 
     private static final Look[] LOOKS = Look.values();
     private static final PseudoClass[] LOOK_CLASSES = new PseudoClass[LOOKS.length];
-    private static final PseudoClass WRONG = PseudoClass.getPseudoClass("wrong");
     private static final PseudoClass LINE_BREAK = PseudoClass.getPseudoClass("line-break");
 
     static {
@@ -92,7 +91,7 @@ final class WordNode extends Group {
         }
 
         separator.setLayoutX(length * cellWidth);
-        separator.pseudoClassStateChanged(WRONG, word.separatorLook() == Look.WRONG);
+        setLook(separator, word.separatorLook());
     }
 
     private Text letter(int index) {
@@ -103,9 +102,9 @@ final class WordNode extends Group {
         return letter;
     }
 
-    private static void setLook(Text letter, Look look) {
+    private static void setLook(Text text, Look look) {
         for (Look each : LOOKS) {
-            letter.pseudoClassStateChanged(LOOK_CLASSES[each.ordinal()], each == look);
+            text.pseudoClassStateChanged(LOOK_CLASSES[each.ordinal()], each == look);
         }
     }
 }

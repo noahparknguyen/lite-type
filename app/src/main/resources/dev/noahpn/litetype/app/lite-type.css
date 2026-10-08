@@ -7,7 +7,7 @@
    -lt-wrong    a wrong letter, and a wrong key at the end of a word
    -lt-extra    a letter typed past the end of a word
    -lt-missed   a letter skipped by an early Space
-   -lt-mark     the ⏎ at the end of a line of code, and quiet outlines
+   -lt-mark     the ⏎ at the end of a line of code, before it's typed, and quiet outlines
    -lt-cursor   the cursor
    -lt-accent   the counter, and what's picked on the theme page
    -lt-dim      quiet labels and hints
@@ -57,6 +57,12 @@
    win over :wrong wherever it sat. */
 .word-end:line-break {
     -fx-fill: -lt-mark;
+}
+
+/* Only a ⏎ shows when typed right: a gap typed right stays a gap. Naming both pseudo-classes
+   ranks this above the others, but a mark is never :correct and :wrong at once. */
+.word-end:line-break:correct {
+    -fx-fill: -lt-correct;
 }
 
 .word-end:wrong {
