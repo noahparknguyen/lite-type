@@ -61,7 +61,6 @@ public class LiteTypeApp extends Application {
     private final Preferences preferences = Preferences.userNodeForPackage(LiteTypeApp.class);
     private final BorderPane root = new BorderPane();
     private final Label progressNumber = new Label();
-    private final ProgressLine progressLine = new ProgressLine();
     private ChoicesBar bar;
     private Choices choices;
     private List<String> themes;
@@ -76,6 +75,7 @@ public class LiteTypeApp extends Application {
     private long seed;
     private Run run;
     private TypingView view;
+    private ProgressLine progressLine;
     private Showing showing = Showing.TEXT;
 
     // In Length mode: how many words or lines the text has, and for code, the line each word is
@@ -132,13 +132,15 @@ public class LiteTypeApp extends Application {
         newRun(newSeed());
 
         // Every frame tells the run the time, so a timed run ends on its deadline even while no
-        // key is pressed, and the countdown moves.
+        // key is pressed, and the countdown moves. It also moves the progress line a frame's
+        // worth, which does nothing when the number is in use or the line has arrived.
         new AnimationTimer() {
             @Override
             public void handle(long now) {
                 if (showing == Showing.TEXT) {
                     run.tick(System.nanoTime());
                     updateStatus();
+                    progressLine.step();
                 }
             }
         }.start();
@@ -422,6 +424,7 @@ public class LiteTypeApp extends Application {
         this.seed = seed;
         run = makeRun(seed);
         view = new TypingView(run, choices.kind());
+        progressLine = new ProgressLine();
         showing = Showing.TEXT;
         bar.setThemesOpen(false);
         bar.setSettingsOpen(false);

@@ -117,10 +117,24 @@
     -fx-alignment: center;
     -fx-spacing: 2.286em;
     -fx-padding: 0 0 1.714em 0;
+    transition: -fx-opacity 250ms ease-out;
 }
 
+/* The bar fades out fast when typing starts, and back in more slowly when it stops: things
+   leave quicker than they arrive (Noah, 2026-10-08). A state's transition is the one used on
+   the way into it. */
 .choices-bar:typing {
     -fx-opacity: 0;
+    transition: -fx-opacity 150ms ease-in;
+}
+
+/* When the system asks for reduced motion, the bar comes and goes at once. The progress line
+   reads the same preference in code. */
+@media (prefers-reduced-motion: reduce) {
+    .choices-bar,
+    .choices-bar:typing {
+        transition: -fx-opacity 0s;
+    }
 }
 
 .choice-group {
