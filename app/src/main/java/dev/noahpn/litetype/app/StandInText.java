@@ -15,7 +15,8 @@ import java.util.random.RandomGenerator;
  */
 final class StandInText {
 
-    private static final String SNIPPET = """
+    // Package-private so the measurement can repeat it into a longer text.
+    static final String SNIPPET = """
         static int countWords(String text) {
             int count = 0;
             boolean inWord = false;

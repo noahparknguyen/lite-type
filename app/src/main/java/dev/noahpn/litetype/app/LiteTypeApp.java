@@ -42,10 +42,7 @@ public class LiteTypeApp extends Application {
 
         // Wide enough for 80 characters of code at the stylesheet's size, plus padding.
         Scene scene = new Scene(root, 1080, 360);
-        URL stylesheet = Objects.requireNonNull(
-            LiteTypeApp.class.getResource("lite-type.css"),
-            "the stylesheet is missing");
-        scene.getStylesheets().add(stylesheet.toExternalForm());
+        scene.getStylesheets().add(stylesheet());
 
         status.getStyleClass().add("status");
         root.setBottom(status);
@@ -124,11 +121,32 @@ public class LiteTypeApp extends Application {
         status.setText("");
     }
 
-    private static void loadFont() throws IOException {
+    /**
+     * Loads the bundled font, so the stylesheet can name it. Package-private for the
+     * measurement, which sets up the display the same way.
+     *
+     * @throws IOException           if the font file can't be read
+     * @throws IllegalStateException if the font is missing or won't load
+     */
+    static void loadFont() throws IOException {
         try (InputStream font = LiteTypeApp.class.getResourceAsStream(FONT)) {
             if (font == null || Font.loadFont(font, 0) == null) {
                 throw new IllegalStateException("could not load the font " + FONT);
             }
         }
+    }
+
+    /**
+     * Returns the stylesheet's address, for a scene to load. Package-private for the
+     * measurement.
+     *
+     * @return the stylesheet's URL, as a string
+     * @throws NullPointerException if the stylesheet is missing
+     */
+    static String stylesheet() {
+        URL stylesheet = Objects.requireNonNull(
+            LiteTypeApp.class.getResource("lite-type.css"),
+            "the stylesheet is missing");
+        return stylesheet.toExternalForm();
     }
 }
