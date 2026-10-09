@@ -13,7 +13,8 @@
 # lite-type-1.0.0-windows-x64.exe.
 #
 # Each system's package resources are in its own folder, linux/ or windows/: the icon, named
-# after the app as jpackage expects.
+# after the app as jpackage expects, and on Linux the control file and the install and removal
+# scripts.
 
 set -euo pipefail
 
@@ -136,7 +137,15 @@ else
     tar -czf "$out/$name.tar.gz" -C "$work" lite-type
 
     # The resource folder gives the package its icon, since a .deb built from an app image
-    # ignores --icon.
+    # ignores --icon, and its install and removal scripts: jpackage's own, except that a system
+    # with no desktop, and so no menu to add lite-type to, does not fail them. Its control file
+    # is jpackage's too, with the dependencies written out. jpackage lists every library the
+    # runtime's native code loads, and every library those load in turn, by the names the
+    # building system uses: on Ubuntu 24.04, names that Ubuntu 22.04 and Debian 12 don't have,
+    # and Ubuntu's own for some that Debian names differently. Written out, the list holds the
+    # package of each library a native file in the runtime loads itself, as Debian's own
+    # dpkg-shlibdeps works it out, and apt brings the rest. A library renamed for 64-bit time
+    # is listed by both names, the new one first.
     jpackage --type deb "${about[@]}" \
         --app-image "$work/lite-type" \
         --resource-dir "$resources" \
