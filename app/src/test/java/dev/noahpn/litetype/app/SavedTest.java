@@ -11,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SavedTest {
 
-    // The build points the test run's saved settings under target/, so this never touches the
-    // user's own.
+    // A node of its own, removed after each test, so this never touches the app's saved settings.
+    // On Linux and macOS the build also points them under target/; Windows keeps them in the
+    // registry, where that has no effect.
     private Preferences preferences;
 
     @BeforeEach

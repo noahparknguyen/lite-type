@@ -3,7 +3,8 @@
 # Builds lite-type's native packages for the system this runs on, from the jars the build made:
 # on Windows an installer (.exe) and a portable .zip, on Linux a .deb and a portable .tar.gz.
 # Each carries a Java runtime of its own, JavaFX included, so nothing else needs installing.
-# jpackage cannot build for another system, so CI runs this once on each (packages.yml).
+# jpackage cannot build for another system, so CI runs this once on each (packages.yml), and a
+# release takes its files from there (release.yml).
 #
 # From the repository root, after `./mvnw package`:
 #
