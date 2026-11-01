@@ -42,12 +42,14 @@ jobs:
       # Temurin 25, the JDK the POM compiles for. Its jpackage builds the packages, and its
       # jlink cuts the runtime they carry. A release takes nothing from the cache: what it
       # ships comes from the tagged code and fresh downloads alone, never from files an
-      # earlier run left behind.
+      # earlier run left behind. A release also asks for the newest Java 25: the runner may
+      # already hold an older one, and the packages carry whichever Java built them.
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: 25
           cache: ${{ !inputs.release && 'maven' || '' }}
+          check-latest: ${{ inputs.release }}
 
       # Through the Maven Wrapper, as anyone building from source runs it: mvnw on Linux,
       # mvnw.cmd on Windows. The tests run on each system, so a failure only Windows shows
