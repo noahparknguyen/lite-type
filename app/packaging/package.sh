@@ -11,7 +11,7 @@
 #     bash app/packaging/package.sh
 #
 # The packages land in app/target/packages, named after the version, as in
-# lite-type-1.0.0-windows-x64.exe.
+# lite-type-1.0.1-windows-x64.exe.
 #
 # Each system's package resources are in its own folder, linux/ or windows/: the icon, named
 # after the app as jpackage expects, and on Linux the control file and the install and removal

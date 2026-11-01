@@ -46,10 +46,10 @@ The [latest release](https://github.com/noahparknguyen/lite-type/releases/latest
 
 | File                               | What it is                                                |
 |------------------------------------|-----------------------------------------------------------|
-| `lite-type-1.0.0-windows-x64.exe`  | The Windows installer                                     |
-| `lite-type-1.0.0-windows-x64.zip`  | Windows, portable: runs from any folder                   |
-| `lite-type-1.0.0-linux-x64.deb`    | The package for Ubuntu 22.04 or later, Debian 12 or later |
-| `lite-type-1.0.0-linux-x64.tar.gz` | Linux, portable: runs from any folder                     |
+| `lite-type-1.0.1-windows-x64.exe`  | The Windows installer                                     |
+| `lite-type-1.0.1-windows-x64.zip`  | Windows, portable: runs from any folder                   |
+| `lite-type-1.0.1-linux-x64.deb`    | The package for Ubuntu 22.04 or later, Debian 12 or later |
+| `lite-type-1.0.1-linux-x64.tar.gz` | Linux, portable: runs from any folder                     |
 | `SHA256SUMS`                       | Every file's checksum, for checking a download            |
 
 Each package carries its own Java runtime, JavaFX included, so there's nothing else to install.
@@ -70,7 +70,7 @@ delete the folder.
 **The `.deb`.** From the folder with the download:
 
 ```
-sudo apt install ./lite-type-1.0.0-linux-x64.deb
+sudo apt install ./lite-type-1.0.1-linux-x64.deb
 ```
 
 lite-type then appears in the desktop's menu under Education, and `/opt/lite-type/bin/lite-type` runs it from a
@@ -106,14 +106,14 @@ sha256sum --check --ignore-missing SHA256SUMS
 On Windows, in PowerShell, compare what this prints with the file's line in `SHA256SUMS`:
 
 ```
-Get-FileHash lite-type-1.0.0-windows-x64.exe
+Get-FileHash lite-type-1.0.1-windows-x64.exe
 ```
 
 Every file also has a signed attestation of the workflow that built it and the commit it was built from. The
 [GitHub CLI](https://cli.github.com/) checks it, here for the release workflow alone:
 
 ```
-gh attestation verify lite-type-1.0.0-windows-x64.exe --repo noahparknguyen/lite-type --signer-workflow noahparknguyen/lite-type/.github/workflows/release.yml
+gh attestation verify lite-type-1.0.1-windows-x64.exe --repo noahparknguyen/lite-type --signer-workflow noahparknguyen/lite-type/.github/workflows/release.yml
 ```
 
 Releases are immutable: once published, their files can't be changed or replaced.
@@ -127,8 +127,8 @@ From the root of the repo:
 ./mvnw package
 ```
 
-On Windows, `.\mvnw.cmd package`. This runs the tests, then writes the two jars, `core/target/lite-type-core-1.0.0.jar`
-and `app/target/lite-type-app-1.0.0.jar`. A failing test means no jars. To run the app from the build:
+On Windows, `.\mvnw.cmd package`. This runs the tests, then writes the two jars, `core/target/lite-type-core-1.0.1.jar`
+and `app/target/lite-type-app-1.0.1.jar`. A failing test means no jars. To run the app from the build:
 
 ```
 ./mvnw -pl app -am javafx:run
