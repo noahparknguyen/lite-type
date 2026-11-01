@@ -35,19 +35,19 @@ version=${version%.jar}
 # JavaFX comes from Gluon's jmods, the form jlink takes, so its native libraries sit inside the
 # runtime instead of being unpacked into the user's home folder on first launch. Gluon doesn't
 # sign them, so each download is pinned by its SHA-256, taken once every class and native
-# library in it had matched OpenJFX's signed jars on Maven Central (2026-10-08). A new JavaFX in
+# library in it had matched OpenJFX's signed jars on Maven Central (2026-11-01). A new JavaFX in
 # the POM stops this script until its jmods are checked the same way and pinned here.
-javafx=27
+javafx=27.0.1
 case "$(uname -s)" in
     Linux)
         system=linux icon=lite-type.png
         jmods_zip=openjfx-${javafx}_linux-x64_bin-jmods.zip
-        jmods_sha256=ea169b02460a38a2b44acf595e28c7abd3d1ab23075e4b03f324ebaf33920c5b
+        jmods_sha256=323ceb45b938485f6921d7c31c994cc649adb1f75b16192580ff84a3119694ba
         ;;
     MINGW* | MSYS* | CYGWIN*)
         system=windows icon=lite-type.ico
         jmods_zip=openjfx-${javafx}_windows-x64_bin-jmods.zip
-        jmods_sha256=0ad5830f31608363e1e239b84bb1ce875f5edf834f0ceda67feead9cfbaf2b41
+        jmods_sha256=5c2a69a7ab42da347b0e8bb244a819e94af75d9f21ae4d129695a3ebc81e3979
         ;;
     *) echo "No packages are built for $(uname -s)." >&2; exit 1 ;;
 esac
